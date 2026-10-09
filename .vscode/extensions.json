@@ -1,0 +1,4 @@
+{
+    "recommendations": ["ms-ossdata.vscode-pgsql", "vue.volar"],
+    "unwantedRecommendations": ["ms-mssql.mssql"]
+}
