@@ -18,5 +18,5 @@ onBeforeUnmount(() => map?.remove());
 </script>
 
 <template>
-    <div ref="el" class="h-screen" />
+    <div ref="el" class="h-full" />
 </template>

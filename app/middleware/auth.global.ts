@@ -1,12 +1,15 @@
 export default defineNuxtRouteMiddleware(async (to) => {
-    const session = await useRequestFetch()("/api/auth/get-session").catch(
-        () => null,
-    );
+    const session = await useRequestFetch()<Session | null>(
+        "/api/auth/get-session",
+    ).catch(() => null);
+    useState<Session | null>("session").value = session;
 
-    if (!session && to.path !== "/login") {
+    if (!session) {
+        if (to.path === "/login") return;
         return navigateTo({ path: "/login", query: { redirect: to.fullPath } });
     }
-    if (session && to.path === "/login") {
+    if (to.path === "/login") return navigateTo("/");
+    if (to.meta.roles && !to.meta.roles.includes(session.user.role ?? "")) {
         return navigateTo("/");
     }
 });

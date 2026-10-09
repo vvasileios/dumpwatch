@@ -1,4 +1,5 @@
 <script setup lang="ts">
+definePageMeta({ layout: false });
 useHead({ title: "Sign in · dumpwatch" });
 
 const route = useRoute();
@@ -102,10 +103,7 @@ const button =
 
             <div class="relative flex items-center gap-2.5 text-lg font-semibold">
                 <span class="grid size-9 place-items-center rounded-xl bg-emerald-500/20 ring-1 ring-emerald-400/30">
-                    <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                        <path d="M12 21s-7-5.5-7-11a7 7 0 1 1 14 0c0 5.5-7 11-7 11Z" stroke-linejoin="round" />
-                        <circle cx="12" cy="10" r="2.5" />
-                    </svg>
+                    <Icon name="lucide:map-pin" class="size-5" />
                 </span>
                 dumpwatch
             </div>
@@ -126,10 +124,7 @@ const button =
             <div class="w-full max-w-sm">
                 <div class="mb-8 flex items-center gap-2.5 text-lg font-semibold text-zinc-900 lg:hidden dark:text-white">
                     <span class="grid size-9 place-items-center rounded-xl bg-emerald-600 text-white">
-                        <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                            <path d="M12 21s-7-5.5-7-11a7 7 0 1 1 14 0c0 5.5-7 11-7 11Z" stroke-linejoin="round" />
-                            <circle cx="12" cy="10" r="2.5" />
-                        </svg>
+                        <Icon name="lucide:map-pin" class="size-5" />
                     </span>
                     dumpwatch
                 </div>
@@ -181,13 +176,8 @@ const button =
                                     :aria-pressed="showPassword"
                                     @click="showPassword = !showPassword"
                                 >
-                                    <svg v-if="!showPassword" class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                                        <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" />
-                                        <circle cx="12" cy="12" r="3" />
-                                    </svg>
-                                    <svg v-else class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                                        <path d="M3 3l18 18M10.6 10.6a2 2 0 0 0 2.8 2.8M9.9 5.1A10.5 10.5 0 0 1 12 5c6.4 0 10 7 10 7a17.6 17.6 0 0 1-3.2 4.1M6.6 6.6C3.9 8.4 2 12 2 12s3.6 7 10 7a9.9 9.9 0 0 0 5.4-1.6" />
-                                    </svg>
+                                    <Icon v-if="!showPassword" name="lucide:eye" class="size-5" />
+                                    <Icon v-else name="lucide:eye-off" class="size-5" />
                                 </button>
                             </div>
                         </div>
@@ -203,10 +193,7 @@ const button =
                             role="alert"
                             class="flex items-start gap-2 rounded-lg bg-red-50 px-3.5 py-2.5 text-sm text-red-700 ring-1 ring-red-600/15 dark:bg-red-950/40 dark:text-red-300"
                         >
-                            <svg class="mt-0.5 size-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                                <circle cx="12" cy="12" r="9" />
-                                <path d="M12 8v4.5M12 16h.01" stroke-linecap="round" />
-                            </svg>
+                            <Icon name="lucide:circle-alert" class="mt-0.5 size-4 shrink-0" />
                             {{ error }}
                         </p>
 
