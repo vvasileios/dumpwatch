@@ -7,4 +7,4 @@ WHERE ST_DWithin(location, ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography, $3
 ORDER BY meters
 LIMIT 20;
 
-EXECUTE nearby(22.94, 40.63, 500);
+EXECUTE nearby(22.95, 40.64, 500);

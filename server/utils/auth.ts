@@ -13,13 +13,18 @@ export const auth = betterAuth({
     plugins: [admin({ ac, roles }), organization(), twoFactor()],
 });
 
+export async function requireSession(event: H3Event) {
+    const session = await auth.api.getSession({ headers: event.headers });
+    if (!session)
+        throw createError({ statusCode: 401, statusMessage: "Unauthorized" });
+    return session;
+}
+
 export async function requirePermission(
     event: H3Event,
     permissions: Record<string, string[]>,
 ) {
-    const session = await auth.api.getSession({ headers: event.headers });
-    if (!session)
-        throw createError({ statusCode: 401, statusMessage: "Unauthorized" });
+    const session = await requireSession(event);
     const { success } = await auth.api.userHasPermission({
         body: { userId: session.user.id, permissions },
     });

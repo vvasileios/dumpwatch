@@ -2,17 +2,17 @@ SET
 PREPARE
                                                                    QUERY PLAN                                                                   
 ------------------------------------------------------------------------------------------------------------------------------------------------
- Limit  (cost=835102.67..835102.72 rows=20 width=41) (actual time=35.305..35.306 rows=20.00 loops=1)
+ Limit  (cost=835102.67..835102.72 rows=20 width=41) (actual time=35.670..35.671 rows=20.00 loops=1)
    Buffers: shared hit=530
-   ->  Sort  (cost=835102.67..835144.34 rows=16667 width=41) (actual time=35.305..35.305 rows=20.00 loops=1)
-         Sort Key: (st_distance(location, '0101000020E6100000713D0AD7A3F03640713D0AD7A3504440'::geography, true))
+   ->  Sort  (cost=835102.67..835144.34 rows=16667 width=41) (actual time=35.670..35.670 rows=20.00 loops=1)
+         Sort Key: (st_distance(location, '0101000020E61000003333333333F3364052B81E85EB514440'::geography, true))
          Sort Method: top-N heapsort  Memory: 27kB
          Buffers: shared hit=530
-         ->  Seq Scan on collection_points  (cost=0.00..834659.17 rows=16667 width=41) (actual time=0.065..35.226 rows=777.00 loops=1)
-               Filter: (st_distance(location, '0101000020E6100000713D0AD7A3F03640713D0AD7A3504440'::geography, true) < '500'::double precision)
-               Rows Removed by Filter: 49223
+         ->  Seq Scan on collection_points  (cost=0.00..834659.17 rows=16667 width=41) (actual time=0.084..35.561 rows=1119.00 loops=1)
+               Filter: (st_distance(location, '0101000020E61000003333333333F3364052B81E85EB514440'::geography, true) < '500'::double precision)
+               Rows Removed by Filter: 48881
                Buffers: shared hit=530
- Planning Time: 0.067 ms
- Execution Time: 35.314 ms
+ Planning Time: 0.045 ms
+ Execution Time: 35.678 ms
 (12 rows)
 

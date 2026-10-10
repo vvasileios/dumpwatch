@@ -9,6 +9,6 @@ ORDER BY location <-> ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography
 LIMIT 20;
 
 \o /dev/null
-EXECUTE nearest(22.94, 40.63);
+EXECUTE nearest(22.95, 40.64);
 \o
-EXPLAIN (ANALYZE, BUFFERS) EXECUTE nearest(22.94, 40.63);
+EXPLAIN (ANALYZE, BUFFERS) EXECUTE nearest(22.95, 40.64);

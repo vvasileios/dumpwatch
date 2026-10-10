@@ -98,10 +98,10 @@ const button =
                 class="pointer-events-none absolute -top-32 -left-32 size-96 rounded-full bg-emerald-500/30 blur-3xl"
             />
             <div
-                class="pointer-events-none absolute -right-24 -bottom-40 size-[28rem] rounded-full bg-teal-400/20 blur-3xl"
+                class="pointer-events-none absolute -right-24 -bottom-40 size-112 rounded-full bg-teal-400/20 blur-3xl"
             />
             <div
-                class="pointer-events-none absolute inset-0 opacity-[0.07] [background-image:radial-gradient(currentColor_1px,transparent_1px)] [background-size:22px_22px]"
+                class="pointer-events-none absolute inset-0 opacity-[0.07] bg-[radial-gradient(currentColor_1px,transparent_1px)] bg-size-[22px_22px]"
             />
 
             <div

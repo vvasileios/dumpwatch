@@ -10,6 +10,6 @@ ORDER BY meters
 LIMIT 20;
 
 \o /dev/null
-EXECUTE nearby_slow(22.94, 40.63, 500);
+EXECUTE nearby_slow(22.95, 40.64, 500);
 \o
-EXPLAIN (ANALYZE, BUFFERS) EXECUTE nearby_slow(22.94, 40.63, 500);
+EXPLAIN (ANALYZE, BUFFERS) EXECUTE nearby_slow(22.95, 40.64, 500);

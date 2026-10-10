@@ -27,7 +27,7 @@ onBeforeUnmount(() => clearTimeout(timer));
         aria-live="polite"
         :class="
             overlay
-                ? 'fixed inset-0 z-[1000] grid place-items-center bg-white/70 text-emerald-600 backdrop-blur-sm dark:bg-zinc-950/70 dark:text-emerald-400'
+                ? 'fixed inset-0 z-1000 grid place-items-center bg-white/70 text-emerald-600 backdrop-blur-sm dark:bg-zinc-950/70 dark:text-emerald-400'
                 : 'inline-flex items-center'
         "
     >

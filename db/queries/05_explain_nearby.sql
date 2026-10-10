@@ -10,14 +10,14 @@ ORDER BY meters
 LIMIT 20;
 
 \o /dev/null
-EXECUTE nearby(22.94, 40.63, 500);
+EXECUTE nearby(22.95, 40.64, 500);
 \o
-EXPLAIN (ANALYZE, BUFFERS) EXECUTE nearby(22.94, 40.63, 500);
+EXPLAIN (ANALYZE, BUFFERS) EXECUTE nearby(22.95, 40.64, 500);
 
 BEGIN;
 DROP INDEX collection_points_location_gix;
 \o /dev/null
-EXECUTE nearby(22.94, 40.63, 500);
+EXECUTE nearby(22.95, 40.64, 500);
 \o
-EXPLAIN (ANALYZE, BUFFERS) EXECUTE nearby(22.94, 40.63, 500);
+EXPLAIN (ANALYZE, BUFFERS) EXECUTE nearby(22.95, 40.64, 500);
 ROLLBACK;
