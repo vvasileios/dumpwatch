@@ -23,7 +23,8 @@ function redirectTarget() {
 
 function describe(err: { status?: number; message?: string }) {
     if (err.status === 401) return "Incorrect email or password.";
-    if (err.status === 429) return "Too many attempts. Wait a moment and try again.";
+    if (err.status === 429)
+        return "Too many attempts. Wait a moment and try again.";
     return err.message || "Something went wrong. Please try again.";
 }
 
@@ -60,7 +61,9 @@ async function verifyCode() {
 
     if (err) {
         error.value =
-            err.status === 401 ? "That code didn't work. Try the latest one." : describe(err);
+            err.status === 401
+                ? "That code didn't work. Try the latest one."
+                : describe(err);
         code.value = "";
         return;
     }
@@ -101,8 +104,12 @@ const button =
                 class="pointer-events-none absolute inset-0 opacity-[0.07] [background-image:radial-gradient(currentColor_1px,transparent_1px)] [background-size:22px_22px]"
             />
 
-            <div class="relative flex items-center gap-2.5 text-lg font-semibold">
-                <span class="grid size-9 place-items-center rounded-xl bg-emerald-500/20 ring-1 ring-emerald-400/30">
+            <div
+                class="relative flex items-center gap-2.5 text-lg font-semibold"
+            >
+                <span
+                    class="grid size-9 place-items-center rounded-xl bg-emerald-500/20 ring-1 ring-emerald-400/30"
+                >
                     <Icon name="lucide:map-pin" class="size-5" />
                 </span>
                 dumpwatch
@@ -113,7 +120,8 @@ const button =
                     Map it. Report it. Get it cleaned.
                 </h2>
                 <p class="mt-4 text-emerald-100/80">
-                    Track illegal dumping across the city and coordinate cleanups in one place.
+                    Track illegal dumping across the city and coordinate
+                    cleanups in one place.
                 </p>
             </div>
 
@@ -122,24 +130,38 @@ const button =
 
         <main class="flex items-center justify-center px-4 py-12 sm:px-8">
             <div class="w-full max-w-sm">
-                <div class="mb-8 flex items-center gap-2.5 text-lg font-semibold text-zinc-900 lg:hidden dark:text-white">
-                    <span class="grid size-9 place-items-center rounded-xl bg-emerald-600 text-white">
+                <div
+                    class="mb-8 flex items-center gap-2.5 text-lg font-semibold text-zinc-900 lg:hidden dark:text-white"
+                >
+                    <span
+                        class="grid size-9 place-items-center rounded-xl bg-emerald-600 text-white"
+                    >
                         <Icon name="lucide:map-pin" class="size-5" />
                     </span>
                     dumpwatch
                 </div>
 
                 <template v-if="step === 'credentials'">
-                    <h1 class="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-white">
+                    <h1
+                        class="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-white"
+                    >
                         Welcome back
                     </h1>
                     <p class="mt-1.5 text-sm text-zinc-500 dark:text-zinc-400">
                         Sign in to continue to your dashboard.
                     </p>
 
-                    <form class="mt-8 space-y-5" novalidate @submit.prevent="signIn">
+                    <form
+                        class="mt-8 space-y-5"
+                        novalidate
+                        @submit.prevent="signIn"
+                    >
                         <div>
-                            <label for="email" class="mb-1.5 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Email</label>
+                            <label
+                                for="email"
+                                class="mb-1.5 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                                >Email</label
+                            >
                             <input
                                 id="email"
                                 v-model.trim="email"
@@ -152,11 +174,15 @@ const button =
                                 :class="input"
                                 :aria-invalid="!!error"
                                 aria-describedby="form-error"
-                            >
+                            />
                         </div>
 
                         <div>
-                            <label for="password" class="mb-1.5 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Password</label>
+                            <label
+                                for="password"
+                                class="mb-1.5 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                                >Password</label
+                            >
                             <div class="relative">
                                 <input
                                     id="password"
@@ -168,22 +194,40 @@ const button =
                                     :class="[input, 'pr-11']"
                                     :aria-invalid="!!error"
                                     aria-describedby="form-error"
-                                >
+                                />
                                 <button
                                     type="button"
                                     class="absolute inset-y-0 right-0 grid w-11 place-items-center rounded-r-lg text-zinc-400 transition hover:text-zinc-600 focus-visible:text-emerald-600 focus-visible:outline-none dark:hover:text-zinc-200"
-                                    :aria-label="showPassword ? 'Hide password' : 'Show password'"
+                                    :aria-label="
+                                        showPassword
+                                            ? 'Hide password'
+                                            : 'Show password'
+                                    "
                                     :aria-pressed="showPassword"
                                     @click="showPassword = !showPassword"
                                 >
-                                    <Icon v-if="!showPassword" name="lucide:eye" class="size-5" />
-                                    <Icon v-else name="lucide:eye-off" class="size-5" />
+                                    <Icon
+                                        v-if="!showPassword"
+                                        name="lucide:eye"
+                                        class="size-5"
+                                    />
+                                    <Icon
+                                        v-else
+                                        name="lucide:eye-off"
+                                        class="size-5"
+                                    />
                                 </button>
                             </div>
                         </div>
 
-                        <label class="flex cursor-pointer items-center gap-2.5 text-sm text-zinc-600 select-none dark:text-zinc-400">
-                            <input v-model="rememberMe" type="checkbox" :class="checkbox">
+                        <label
+                            class="flex cursor-pointer items-center gap-2.5 text-sm text-zinc-600 select-none dark:text-zinc-400"
+                        >
+                            <input
+                                v-model="rememberMe"
+                                type="checkbox"
+                                :class="checkbox"
+                            />
                             Keep me signed in
                         </label>
 
@@ -193,7 +237,10 @@ const button =
                             role="alert"
                             class="flex items-start gap-2 rounded-lg bg-red-50 px-3.5 py-2.5 text-sm text-red-700 ring-1 ring-red-600/15 dark:bg-red-950/40 dark:text-red-300"
                         >
-                            <Icon name="lucide:circle-alert" class="mt-0.5 size-4 shrink-0" />
+                            <Icon
+                                name="lucide:circle-alert"
+                                class="mt-0.5 size-4 shrink-0"
+                            />
                             {{ error }}
                         </p>
 
@@ -203,23 +250,36 @@ const button =
                             :disabled="loading || !email || !password"
                             :aria-busy="loading"
                         >
-                            <AppLoader v-if="loading" size="sm" :delay="0" label="Signing in" />
+                            <AppLoader
+                                v-if="loading"
+                                size="sm"
+                                :delay="0"
+                                label="Signing in"
+                            />
                             {{ loading ? "Signing in…" : "Sign in" }}
                         </button>
                     </form>
                 </template>
 
                 <template v-else>
-                    <h1 class="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-white">
+                    <h1
+                        class="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-white"
+                    >
                         Two-factor authentication
                     </h1>
                     <p class="mt-1.5 text-sm text-zinc-500 dark:text-zinc-400">
                         Enter the 6-digit code from your authenticator app.
                     </p>
 
-                    <form class="mt-8 space-y-5" novalidate @submit.prevent="verifyCode">
+                    <form
+                        class="mt-8 space-y-5"
+                        novalidate
+                        @submit.prevent="verifyCode"
+                    >
                         <div>
-                            <label for="code" class="sr-only">Authentication code</label>
+                            <label for="code" class="sr-only"
+                                >Authentication code</label
+                            >
                             <input
                                 id="code"
                                 v-model="code"
@@ -229,15 +289,24 @@ const button =
                                 maxlength="6"
                                 autofocus
                                 placeholder="000000"
-                                :class="[input, 'text-center font-mono text-2xl tracking-[0.5em]']"
+                                :class="[
+                                    input,
+                                    'text-center font-mono text-2xl tracking-[0.5em]',
+                                ]"
                                 :aria-invalid="!!error"
                                 aria-describedby="form-error"
                                 @input="onCodeInput"
-                            >
+                            />
                         </div>
 
-                        <label class="flex cursor-pointer items-center gap-2.5 text-sm text-zinc-600 select-none dark:text-zinc-400">
-                            <input v-model="trustDevice" type="checkbox" :class="checkbox">
+                        <label
+                            class="flex cursor-pointer items-center gap-2.5 text-sm text-zinc-600 select-none dark:text-zinc-400"
+                        >
+                            <input
+                                v-model="trustDevice"
+                                type="checkbox"
+                                :class="checkbox"
+                            />
                             Trust this device for 30 days
                         </label>
 
@@ -256,7 +325,12 @@ const button =
                             :disabled="loading || code.length !== 6"
                             :aria-busy="loading"
                         >
-                            <AppLoader v-if="loading" size="sm" :delay="0" label="Verifying" />
+                            <AppLoader
+                                v-if="loading"
+                                size="sm"
+                                :delay="0"
+                                label="Verifying"
+                            />
                             {{ loading ? "Verifying…" : "Verify" }}
                         </button>
 

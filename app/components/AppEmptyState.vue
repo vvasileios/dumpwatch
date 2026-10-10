@@ -10,8 +10,14 @@ defineProps<{ icon: string; title: string; description: string }>();
             >
                 <Icon :name="icon" class="size-6" />
             </span>
-            <h2 class="mt-4 text-lg font-semibold text-zinc-900 dark:text-white">{{ title }}</h2>
-            <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">{{ description }}</p>
+            <h2
+                class="mt-4 text-lg font-semibold text-zinc-900 dark:text-white"
+            >
+                {{ title }}
+            </h2>
+            <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+                {{ description }}
+            </p>
             <slot />
         </div>
     </div>

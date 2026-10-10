@@ -7,8 +7,18 @@ export interface NavItem {
 }
 
 export const navItems: NavItem[] = [
-    { label: "Map", to: "/", icon: "lucide:map", description: "Reported dumps across the city" },
-    { label: "Reports", to: "/reports", icon: "lucide:flag", description: "Browse and track reports" },
+    {
+        label: "Map",
+        to: "/",
+        icon: "lucide:map",
+        description: "Reported dumps across the city",
+    },
+    {
+        label: "Reports",
+        to: "/reports",
+        icon: "lucide:flag",
+        description: "Browse and track reports",
+    },
     {
         label: "Collection points",
         to: "/collection-points",

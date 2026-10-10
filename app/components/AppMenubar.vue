@@ -5,7 +5,9 @@ const mobileNav = ref<HTMLElement>();
 
 const items = computed(() => visibleNav(session.value?.user.role));
 const initials = computed(() =>
-    (session.value?.user.name || session.value?.user.email || "?").slice(0, 2).toUpperCase(),
+    (session.value?.user.name || session.value?.user.email || "?")
+        .slice(0, 2)
+        .toUpperCase(),
 );
 const shortcut = ref("Ctrl K");
 onMounted(() => {
@@ -14,7 +16,8 @@ onMounted(() => {
 
 const link =
     "rounded-lg px-3 py-1.5 text-sm font-medium text-zinc-600 transition hover:bg-zinc-900/5 hover:text-zinc-900 dark:text-zinc-300 dark:hover:bg-white/10 dark:hover:text-white";
-const active = "!bg-emerald-600/10 !text-emerald-700 dark:!bg-emerald-400/10 dark:!text-emerald-300";
+const active =
+    "!bg-emerald-600/10 !text-emerald-700 dark:!bg-emerald-400/10 dark:!text-emerald-300";
 const iconButton =
     "grid size-9 place-items-center rounded-lg text-zinc-500 transition hover:bg-zinc-900/5 hover:text-zinc-900 focus-visible:ring-4 focus-visible:ring-emerald-600/25 focus-visible:outline-none dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-white";
 const panel =
@@ -30,14 +33,22 @@ const panel =
                 to="/"
                 class="mr-1 flex items-center gap-2 rounded-lg px-1.5 py-1 font-semibold text-zinc-900 dark:text-white"
             >
-                <span class="grid size-7 place-items-center rounded-lg bg-emerald-600 text-white">
+                <span
+                    class="grid size-7 place-items-center rounded-lg bg-emerald-600 text-white"
+                >
                     <Icon name="lucide:map-pin" class="size-4" />
                 </span>
                 dumpwatch
             </NuxtLink>
 
             <nav aria-label="Main" class="hidden items-center gap-0.5 md:flex">
-                <NuxtLink v-for="item in items" :key="item.to" :to="item.to" :class="link" :active-class="active">
+                <NuxtLink
+                    v-for="item in items"
+                    :key="item.to"
+                    :to="item.to"
+                    :class="link"
+                    :active-class="active"
+                >
                     {{ item.label }}
                 </NuxtLink>
             </nav>
@@ -59,9 +70,17 @@ const panel =
                 >
                     <Icon name="lucide:search" class="size-4" />
                     Search
-                    <kbd class="rounded bg-zinc-900/5 px-1.5 py-0.5 font-sans text-xs dark:bg-white/10">{{ shortcut }}</kbd>
+                    <kbd
+                        class="rounded bg-zinc-900/5 px-1.5 py-0.5 font-sans text-xs dark:bg-white/10"
+                        >{{ shortcut }}</kbd
+                    >
                 </button>
-                <button type="button" :class="[iconButton, 'md:hidden']" aria-label="Search" @click="palette = true">
+                <button
+                    type="button"
+                    :class="[iconButton, 'md:hidden']"
+                    aria-label="Search"
+                    @click="palette = true"
+                >
                     <Icon name="lucide:search" class="size-5" />
                 </button>
 
@@ -74,21 +93,35 @@ const panel =
                     {{ initials }}
                 </button>
 
-                <button type="button" popovertarget="mobile-nav" :class="[iconButton, 'md:hidden']" aria-label="Open menu">
+                <button
+                    type="button"
+                    popovertarget="mobile-nav"
+                    :class="[iconButton, 'md:hidden']"
+                    aria-label="Open menu"
+                >
                     <Icon name="lucide:menu" class="size-5" />
                 </button>
             </div>
         </div>
 
-        <div id="user-menu" popover :class="[panel, 'top-16 right-2 w-64 md:right-4']">
+        <div
+            id="user-menu"
+            popover
+            :class="[panel, 'top-16 right-2 w-64 md:right-4']"
+        >
             <div class="px-3 py-2">
-                <p class="truncate font-medium text-zinc-900 dark:text-white">{{ session?.user.name }}</p>
-                <p class="truncate text-zinc-500 dark:text-zinc-400">{{ session?.user.email }}</p>
+                <p class="truncate font-medium text-zinc-900 dark:text-white">
+                    {{ session?.user.name }}
+                </p>
+                <p class="truncate text-zinc-500 dark:text-zinc-400">
+                    {{ session?.user.email }}
+                </p>
                 <span
                     class="mt-2 inline-block rounded-full bg-emerald-600/10 px-2 py-0.5 text-xs font-medium text-emerald-700 capitalize dark:text-emerald-300"
-                >{{ session?.user.role ?? "user" }}</span>
+                    >{{ session?.user.role ?? "user" }}</span
+                >
             </div>
-            <hr class="my-1 border-zinc-900/5 dark:border-white/10">
+            <hr class="my-1 border-zinc-900/5 dark:border-white/10" />
             <button
                 type="button"
                 class="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-zinc-700 transition hover:bg-zinc-900/5 dark:text-zinc-300 dark:hover:bg-white/10"
@@ -114,10 +147,19 @@ const panel =
                 :active-class="active"
                 @click="mobileNav?.hidePopover()"
             >
-                <Icon :name="item.icon" class="size-5 text-emerald-600 dark:text-emerald-400" />
+                <Icon
+                    :name="item.icon"
+                    class="size-5 text-emerald-600 dark:text-emerald-400"
+                />
                 <span>
-                    <span class="block font-medium text-zinc-900 dark:text-white">{{ item.label }}</span>
-                    <span class="block text-xs text-zinc-500 dark:text-zinc-400">{{ item.description }}</span>
+                    <span
+                        class="block font-medium text-zinc-900 dark:text-white"
+                        >{{ item.label }}</span
+                    >
+                    <span
+                        class="block text-xs text-zinc-500 dark:text-zinc-400"
+                        >{{ item.description }}</span
+                    >
                 </span>
             </NuxtLink>
         </nav>

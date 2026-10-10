@@ -14,7 +14,8 @@ const visible = ref(props.delay === 0);
 let timer: ReturnType<typeof setTimeout> | undefined;
 
 onMounted(() => {
-    if (!visible.value) timer = setTimeout(() => (visible.value = true), props.delay);
+    if (!visible.value)
+        timer = setTimeout(() => (visible.value = true), props.delay);
 });
 onBeforeUnmount(() => clearTimeout(timer));
 </script>

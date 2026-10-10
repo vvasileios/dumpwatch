@@ -4,7 +4,10 @@ export HOST_GID := $(shell id -g)
 APP_URL := http://localhost:3000
 OPEN := $(shell command -v wslview || command -v xdg-open || command -v open || command -v explorer.exe)
 
-.PHONY: up down build logs sh psql install reset
+.PHONY: up down build logs sh psql install reset sql
+sql:
+	$(if $(f),,$(error usage: make sql f=db/queries/01_nearby.sql))
+	docker compose exec -T db sh -c 'psql -U $$POSTGRES_USER -d $$POSTGRES_DB -v ON_ERROR_STOP=1' < $(f)
 
 up:
 	docker compose up -d --build

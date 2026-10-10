@@ -1,0 +1,14 @@
+SET
+PREPARE
+                                                                              QUERY PLAN                                                                              
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=0.28..257.30 rows=20 width=49) (actual time=0.065..0.102 rows=20.00 loops=1)
+   Buffers: shared hit=30
+   ->  Index Scan using collection_points_location_gix on collection_points  (cost=0.28..642563.28 rows=50000 width=49) (actual time=0.065..0.101 rows=20.00 loops=1)
+         Order By: (location <-> '0101000020E6100000713D0AD7A3F03640713D0AD7A3504440'::geography)
+         Index Searches: 1
+         Buffers: shared hit=30
+ Planning Time: 0.038 ms
+ Execution Time: 0.109 ms
+(8 rows)
+

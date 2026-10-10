@@ -20,14 +20,21 @@ const commands = computed<Command[]>(() => [
         icon: i.icon,
         run: () => navigateTo(i.to),
     })),
-    { label: "Report a dump", description: "Pin a new illegal dump", icon: "lucide:plus", run: () => navigateTo("/reports/new") },
+    {
+        label: "Report a dump",
+        description: "Pin a new illegal dump",
+        icon: "lucide:plus",
+        run: () => navigateTo("/reports/new"),
+    },
     { label: "Sign out", icon: "lucide:log-out", run: signOut },
 ]);
 
 const results = computed(() => {
     const q = query.value.trim().toLowerCase();
     if (!q) return commands.value;
-    return commands.value.filter((c) => `${c.label} ${c.description ?? ""}`.toLowerCase().includes(q));
+    return commands.value.filter((c) =>
+        `${c.label} ${c.description ?? ""}`.toLowerCase().includes(q),
+    );
 });
 
 watch(results, () => (active.value = 0));
@@ -69,7 +76,9 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKeydown));
         @close="open = false"
         @click.self="open = false"
     >
-        <div class="flex items-center gap-3 border-b border-zinc-900/5 px-4 dark:border-white/10">
+        <div
+            class="flex items-center gap-3 border-b border-zinc-900/5 px-4 dark:border-white/10"
+        >
             <Icon name="lucide:search" class="size-5 text-zinc-400" />
             <input
                 ref="input"
@@ -80,15 +89,25 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKeydown));
                 role="combobox"
                 aria-expanded="true"
                 aria-controls="palette-results"
-                :aria-activedescendant="results.length ? `palette-${active}` : undefined"
+                :aria-activedescendant="
+                    results.length ? `palette-${active}` : undefined
+                "
                 @keydown.down.prevent="move(1)"
                 @keydown.up.prevent="move(-1)"
                 @keydown.enter.prevent="run(results[active])"
+            />
+            <kbd
+                class="rounded bg-zinc-900/5 px-1.5 py-0.5 text-xs text-zinc-500 dark:bg-white/10 dark:text-zinc-400"
+                >Esc</kbd
             >
-            <kbd class="rounded bg-zinc-900/5 px-1.5 py-0.5 text-xs text-zinc-500 dark:bg-white/10 dark:text-zinc-400">Esc</kbd>
         </div>
 
-        <ul v-if="results.length" id="palette-results" role="listbox" class="max-h-[min(60vh,28rem)] overflow-y-auto p-2">
+        <ul
+            v-if="results.length"
+            id="palette-results"
+            role="listbox"
+            class="max-h-[min(60vh,28rem)] overflow-y-auto p-2"
+        >
             <li
                 v-for="(cmd, i) in results"
                 :id="`palette-${i}`"
@@ -96,18 +115,37 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKeydown));
                 role="option"
                 :aria-selected="i === active"
                 class="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-sm"
-                :class="i === active ? 'bg-emerald-600/10 text-emerald-800 dark:text-emerald-200' : 'text-zinc-700 dark:text-zinc-300'"
+                :class="
+                    i === active
+                        ? 'bg-emerald-600/10 text-emerald-800 dark:text-emerald-200'
+                        : 'text-zinc-700 dark:text-zinc-300'
+                "
                 @mousemove="active = i"
                 @click="run(cmd)"
             >
-                <Icon :name="cmd.icon" class="size-5 shrink-0" :class="i === active ? 'text-emerald-600' : 'text-zinc-400'" />
+                <Icon
+                    :name="cmd.icon"
+                    class="size-5 shrink-0"
+                    :class="i === active ? 'text-emerald-600' : 'text-zinc-400'"
+                />
                 <span class="flex-1">
                     <span class="block font-medium">{{ cmd.label }}</span>
-                    <span v-if="cmd.description" class="block text-xs text-zinc-500 dark:text-zinc-400">{{ cmd.description }}</span>
+                    <span
+                        v-if="cmd.description"
+                        class="block text-xs text-zinc-500 dark:text-zinc-400"
+                        >{{ cmd.description }}</span
+                    >
                 </span>
-                <span v-if="i === active" class="text-xs text-zinc-400" aria-hidden="true">↵</span>
+                <span
+                    v-if="i === active"
+                    class="text-xs text-zinc-400"
+                    aria-hidden="true"
+                    >↵</span
+                >
             </li>
         </ul>
-        <p v-else class="px-4 py-10 text-center text-sm text-zinc-500">No results for “{{ query }}”</p>
+        <p v-else class="px-4 py-10 text-center text-sm text-zinc-500">
+            No results for “{{ query }}”
+        </p>
     </dialog>
 </template>

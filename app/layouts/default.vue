@@ -5,13 +5,17 @@ const maximized = useState("window-maximized", () => false);
 
 const items = computed(() => visibleNav(session.value?.user.role));
 const current = computed(() => navItems.find((i) => i.to === route.path));
-const title = computed(() => route.meta.title ?? current.value?.label ?? "dumpwatch");
+const title = computed(
+    () => route.meta.title ?? current.value?.label ?? "dumpwatch",
+);
 
 useHead({ title: () => `${title.value} · dumpwatch` });
 </script>
 
 <template>
-    <div class="relative flex h-dvh flex-col overflow-hidden bg-emerald-50 dark:bg-zinc-950">
+    <div
+        class="relative flex h-dvh flex-col overflow-hidden bg-emerald-50 dark:bg-zinc-950"
+    >
         <div
             class="pointer-events-none absolute inset-0 bg-[radial-gradient(60rem_40rem_at_0%_0%,rgb(16_185_129/0.18),transparent),radial-gradient(50rem_40rem_at_100%_100%,rgb(20_184_166/0.15),transparent)]"
         />
@@ -49,16 +53,31 @@ useHead({ title: () => `${title.value} · dumpwatch` });
                 <header
                     class="hidden h-10 shrink-0 items-center gap-2 border-b border-zinc-900/5 px-3 text-sm md:flex dark:border-white/10"
                 >
-                    <Icon v-if="current" :name="current.icon" class="size-4 text-emerald-600 dark:text-emerald-400" />
-                    <h1 class="font-medium text-zinc-800 dark:text-zinc-100">{{ title }}</h1>
+                    <Icon
+                        v-if="current"
+                        :name="current.icon"
+                        class="size-4 text-emerald-600 dark:text-emerald-400"
+                    />
+                    <h1 class="font-medium text-zinc-800 dark:text-zinc-100">
+                        {{ title }}
+                    </h1>
                     <button
                         type="button"
                         class="ml-auto grid size-7 place-items-center rounded-md text-zinc-400 transition hover:bg-zinc-900/5 hover:text-zinc-700 dark:hover:bg-white/10 dark:hover:text-zinc-200"
-                        :aria-label="maximized ? 'Restore window' : 'Maximize window'"
+                        :aria-label="
+                            maximized ? 'Restore window' : 'Maximize window'
+                        "
                         :aria-pressed="maximized"
                         @click="maximized = !maximized"
                     >
-                        <Icon :name="maximized ? 'lucide:minimize-2' : 'lucide:maximize-2'" class="size-4" />
+                        <Icon
+                            :name="
+                                maximized
+                                    ? 'lucide:minimize-2'
+                                    : 'lucide:maximize-2'
+                            "
+                            class="size-4"
+                        />
                     </button>
                 </header>
                 <main class="relative isolate min-h-0 flex-1 overflow-y-auto">
