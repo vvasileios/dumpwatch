@@ -17,12 +17,15 @@ CREATE TABLE dump_reports (
 	location geography(Point, 4326) NOT NULL,
 	description text,
 	status text NOT NULL DEFAULT 'open' CHECK (status IN ('open','assigned','cleared')),
+	reported_by text,
 	reported_at timestamptz NOT NULL DEFAULT now(),
 	cleared_at timestamptz,
 	CONSTRAINT dump_reports_cleared_at_matches_status
 		CHECK ((status = 'cleared') = (cleared_at IS NOT NULL)),
 	CONSTRAINT dump_reports_cleared_after_reported
-		CHECK (cleared_at >= reported_at)
+		CHECK (cleared_at >= reported_at),
+	CONSTRAINT dump_reports_description_length
+		CHECK (description IS NULL OR char_length(description) BETWEEN 5 AND 1000)
 );
 
 CREATE INDEX collection_points_location_gix ON collection_points USING gist (location);
