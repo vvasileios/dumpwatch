@@ -20,7 +20,8 @@ function popupFor(p: NearbyPoint) {
     title.className = "capitalize";
     title.textContent = p.type;
     const details = document.createElement("div");
-    const fill = p.fill_level === null ? "Fill level unknown" : `${p.fill_level}% full`;
+    const fill =
+        p.fill_level === null ? "Fill level unknown" : `${p.fill_level}% full`;
     details.textContent = `${fill} · ${formatDistance(p.meters)} away`;
     root.append(title, details);
     return root;
@@ -71,17 +72,11 @@ function drawMarkers() {
     }
 }
 
-onMounted(async () => {
-    await nextTick();
-    map = L.map(el.value!, { zoomControl: false }).setView([40.63, 22.945], 14);
-    L.control.zoom({ position: "bottomright" }).addTo(map);
-    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        maxZoom: 19,
-        attribution: "&copy; OpenStreetMap contributors",
-    }).addTo(map);
-    searchArea.addTo(map);
-    markers.addTo(map);
-    map.on("click", (e) => {
+useLeafletMap(el, (m) => {
+    map = m;
+    searchArea.addTo(m);
+    markers.addTo(m);
+    m.on("click", (e) => {
         const { lat, lng } = e.latlng.wrap();
         emit("pick", lat, lng);
     });
@@ -95,8 +90,6 @@ watch(
     (r) => circle?.setRadius(r),
 );
 watch(() => props.points, drawMarkers);
-
-onBeforeUnmount(() => map?.remove());
 </script>
 
 <template>

@@ -1,6 +1,8 @@
-export type ReportStatus = "open" | "assigned" | "cleared";
+import type { REPORT_STATUSES } from "../utils/reports";
 
-export interface Report {
+export type ReportStatus = (typeof REPORT_STATUSES)[number];
+
+export interface DumpReport {
     id: string;
     status: ReportStatus;
     description: string | null;

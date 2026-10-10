@@ -22,19 +22,19 @@ const QUERY = `
 	ORDER BY reported_at DESC
 	LIMIT 500
 `;
-export default defineEventHandler(async (event): Promise<Report[]> => {
+export default defineEventHandler(async (event): Promise<DumpReport[]> => {
     await requireSession(event);
 
     const { bbox, status } = await getValidatedQuery(
         event,
         z.object({
             bbox: Bbox,
-            status: z.enum(["open", "assigned", "cleared"]).optional(),
+            status: z.enum(REPORT_STATUSES).optional(),
         }).parse,
     );
 
     const [minLng, minLat, maxLng, maxLat] = bbox;
-    const { rows } = await db().query<Report>(QUERY, [
+    const { rows } = await db().query<DumpReport>(QUERY, [
         minLng,
         minLat,
         maxLng,

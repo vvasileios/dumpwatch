@@ -8,7 +8,7 @@ const QUERY = `
 	RETURNING id, status, description, reported_at, cleared_at,
 		ST_Y(location::geometry) AS lat, ST_X(location::geometry) AS lng`;
 
-export default defineEventHandler(async (event): Promise<Report> => {
+export default defineEventHandler(async (event): Promise<DumpReport> => {
     await requirePermission(event, { report: ["update"] });
     const { id } = await getValidatedRouterParams(
         event,
@@ -18,11 +18,11 @@ export default defineEventHandler(async (event): Promise<Report> => {
     const { status } = await readValidatedBody(
         event,
         z.object({
-            status: z.enum(["open", "assigned", "cleared"]),
+            status: z.enum(REPORT_STATUSES),
         }).parse,
     );
 
-    const { rows } = await db().query<Report>(QUERY, [id, status]);
+    const { rows } = await db().query<DumpReport>(QUERY, [id, status]);
 
     if (rows.length === 0) {
         throw createError({

@@ -3,15 +3,24 @@ import { z } from "zod";
 const BODY = z.object({
     lat: z.number().min(-90).max(90),
     lng: z.number().min(-180).max(180),
-    description: z.string().trim().min(5).max(1000),
+    description: z
+        .string()
+        .trim()
+        .min(REPORT_DESCRIPTION.min)
+        .max(REPORT_DESCRIPTION.max),
 });
 
-export default defineEventHandler(async (event): Promise<Report> => {
+export default defineEventHandler(async (event): Promise<DumpReport> => {
     const session = await requirePermission(event, { report: ["create"] });
-    const { lat, lng, description } = await readValidatedBody(
-        event,
-        BODY.parse,
-    );
+    const result = BODY.safeParse(await readBody(event));
+    if (!result.success) {
+        throw createError({
+            statusCode: 400,
+            statusMessage: "Invalid report",
+            data: z.flattenError(result.error).fieldErrors,
+        });
+    }
+    const { lat, lng, description } = result.data;
 
     const inServiceArea = await isInServiceArea(lng, lat);
     if (!inServiceArea) {
@@ -21,7 +30,7 @@ export default defineEventHandler(async (event): Promise<Report> => {
         });
     }
 
-    const { rows } = await db().query<Report>(
+    const { rows } = await db().query<DumpReport>(
         `
 			INSERT INTO dump_reports (location, description, reported_by)
 			VALUES (ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography, $3, $4)
