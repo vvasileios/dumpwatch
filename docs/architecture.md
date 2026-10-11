@@ -34,8 +34,13 @@ app/
   components/                  MapView.client.vue, LocationPicker.client.vue, NearbyPanel.vue,
                                ReportsLayerCard.vue (v-model:show), AppMenubar.vue,
                                AppCommandPalette.vue (Cmd/Ctrl+K), AppLoader.vue, AppEmptyState.vue
+  components/shared/           UI kit, auto-imported as <SharedX>: Button (primary/secondary/ghost,
+                               `to` renders NuxtLink, `loading`/`icon`), IconButton (required label),
+                               Field (label), Input (trailing slot), Textarea, Select (typed options),
+                               Checkbox; all form controls use v-model (defineModel)
   utils/                       nav.ts (one nav list, role-filtered), auth-client.ts, point-types.ts,
-                               report-status.ts (reportStatusColors)
+                               report-status.ts (reportStatusColors), field.ts (fieldClass: shared
+                               border/focus/invalid styles for inputs, textareas, selects)
   types/page-meta.d.ts         PageMeta.roles / title
 server/
   api/auth/[...all].ts         Better Auth handler

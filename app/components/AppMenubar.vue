@@ -18,8 +18,6 @@ const link =
     "rounded-lg px-3 py-1.5 text-sm font-medium text-zinc-600 transition hover:bg-zinc-900/5 hover:text-zinc-900 dark:text-zinc-300 dark:hover:bg-white/10 dark:hover:text-white";
 const active =
     "!bg-emerald-600/10 !text-emerald-700 dark:!bg-emerald-400/10 dark:!text-emerald-300";
-const iconButton =
-    "grid size-9 place-items-center rounded-lg text-zinc-500 transition hover:bg-zinc-900/5 hover:text-zinc-900 focus-visible:ring-4 focus-visible:ring-emerald-600/25 focus-visible:outline-none dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-white";
 const panel =
     "fixed inset-auto m-0 rounded-xl border-0 bg-white p-1.5 text-sm shadow-xl ring-1 ring-zinc-900/10 dark:bg-zinc-900 dark:ring-white/10";
 </script>
@@ -54,14 +52,14 @@ const panel =
             </nav>
 
             <div class="ml-auto flex items-center gap-1">
-                <NuxtLink
+                <SharedButton
                     to="/reports/new"
-                    class="mr-1 inline-flex items-center gap-1.5 rounded-lg border-b-[3px] border-emerald-800 bg-emerald-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-emerald-500 active:translate-y-px active:border-b focus-visible:ring-4 focus-visible:ring-emerald-600/30 focus-visible:outline-none"
+                    icon="lucide:plus"
+                    class="mr-1"
                 >
-                    <Icon name="lucide:plus" class="size-4" />
                     <span class="hidden sm:inline">Report dump</span>
                     <span class="sr-only sm:hidden">Report dump</span>
-                </NuxtLink>
+                </SharedButton>
 
                 <button
                     type="button"
@@ -75,14 +73,12 @@ const panel =
                         >{{ shortcut }}</kbd
                     >
                 </button>
-                <button
-                    type="button"
-                    :class="[iconButton, 'md:hidden']"
-                    aria-label="Search"
+                <SharedIconButton
+                    icon="lucide:search"
+                    label="Search"
+                    class="md:hidden"
                     @click="palette = true"
-                >
-                    <Icon name="lucide:search" class="size-5" />
-                </button>
+                />
 
                 <button
                     type="button"
@@ -93,14 +89,12 @@ const panel =
                     {{ initials }}
                 </button>
 
-                <button
-                    type="button"
+                <SharedIconButton
+                    icon="lucide:menu"
+                    label="Open menu"
                     popovertarget="mobile-nav"
-                    :class="[iconButton, 'md:hidden']"
-                    aria-label="Open menu"
-                >
-                    <Icon name="lucide:menu" class="size-5" />
-                </button>
+                    class="md:hidden"
+                />
             </div>
         </div>
 

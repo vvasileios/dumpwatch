@@ -10,7 +10,10 @@ const props = defineProps<{
 }>();
 const emit = defineEmits<{ locate: [] }>();
 
-const radii = [250, 500, 1000, 2000];
+const radii = [250, 500, 1000, 2000].map((r) => ({
+    value: r,
+    label: `Within ${formatDistance(r)}`,
+}));
 
 const status = computed(() => {
     if (props.error) return props.error;
@@ -45,25 +48,20 @@ const nearest = computed(() => props.points.slice(0, 5));
         </div>
 
         <div class="mt-3 flex items-center gap-2">
-            <label for="nearby-radius" class="sr-only">Search radius</label>
-            <select
-                id="nearby-radius"
-                v-model.number="radius"
-                class="h-9 flex-1 rounded-lg border border-zinc-300 bg-white px-2.5 text-sm text-zinc-900 focus:border-emerald-600 focus:ring-4 focus:ring-emerald-600/15 focus:outline-none dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
-            >
-                <option v-for="r in radii" :key="r" :value="r">
-                    Within {{ formatDistance(r) }}
-                </option>
-            </select>
-            <button
-                type="button"
-                class="inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-medium text-zinc-700 ring-1 ring-zinc-900/10 transition hover:bg-zinc-900/5 focus-visible:ring-4 focus-visible:ring-emerald-600/25 focus-visible:outline-none dark:text-zinc-200 dark:ring-white/10 dark:hover:bg-white/10 disabled:opacity-60"
+            <SharedSelect
+                v-model="radius"
+                :options="radii"
+                aria-label="Search radius"
+                class="flex-1"
+            />
+            <SharedButton
+                variant="secondary"
+                icon="lucide:locate-fixed"
                 :disabled="locating"
                 @click="emit('locate')"
             >
-                <Icon name="lucide:locate-fixed" class="size-4" />
                 Near me
-            </button>
+            </SharedButton>
         </div>
 
         <p

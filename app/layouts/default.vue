@@ -42,24 +42,18 @@ useHead({ title: () => `${title.value} · dumpwatch` });
                     <h1 class="font-medium text-zinc-800 dark:text-zinc-100">
                         {{ title }}
                     </h1>
-                    <button
-                        type="button"
-                        class="ml-auto grid size-7 place-items-center rounded-md text-zinc-400 transition hover:bg-zinc-900/5 hover:text-zinc-700 dark:hover:bg-white/10 dark:hover:text-zinc-200"
-                        :aria-label="
+                    <SharedIconButton
+                        size="sm"
+                        :icon="
+                            maximized ? 'lucide:minimize-2' : 'lucide:maximize-2'
+                        "
+                        :label="
                             maximized ? 'Restore window' : 'Maximize window'
                         "
                         :aria-pressed="maximized"
+                        class="ml-auto"
                         @click="maximized = !maximized"
-                    >
-                        <Icon
-                            :name="
-                                maximized
-                                    ? 'lucide:minimize-2'
-                                    : 'lucide:maximize-2'
-                            "
-                            class="size-4"
-                        />
-                    </button>
+                    />
                 </header>
                 <main class="relative isolate min-h-0 flex-1 overflow-y-auto">
                     <slot />

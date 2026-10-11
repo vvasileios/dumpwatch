@@ -35,11 +35,11 @@ const empty = computed(() => {
     };
 });
 
-async function onStatus(report: DumpReport, event: Event) {
-    const select = event.target as HTMLSelectElement;
-    const ok = await updateStatus(report, select.value as ReportStatus);
-    if (!ok) select.value = report.status;
-}
+const statusOptions = REPORT_STATUSES.map((s) => ({ value: s, label: s }));
+const filterOptions = [
+    { value: null, label: "All statuses" },
+    ...statusOptions,
+];
 </script>
 
 <template>
@@ -67,24 +67,15 @@ async function onStatus(report: DumpReport, event: Event) {
                     }}
                 </p>
             </div>
-            <label for="report-filter" class="sr-only">Filter by status</label>
-            <select
-                id="report-filter"
+            <SharedSelect
                 v-model="filter"
-                class="h-9 rounded-lg border border-zinc-300 bg-white px-2.5 text-sm text-zinc-900 capitalize focus:border-emerald-600 focus:ring-4 focus:ring-emerald-600/15 focus:outline-none dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
-            >
-                <option :value="null">All statuses</option>
-                <option v-for="s in REPORT_STATUSES" :key="s" :value="s">
-                    {{ s }}
-                </option>
-            </select>
-            <NuxtLink
-                to="/reports/new"
-                class="inline-flex h-9 items-center gap-1.5 rounded-lg border-b-[3px] border-emerald-800 bg-emerald-600 px-3 text-sm font-semibold text-white transition hover:bg-emerald-500 active:translate-y-px active:border-b"
-            >
-                <Icon name="lucide:plus" class="size-4" />
+                :options="filterOptions"
+                aria-label="Filter by status"
+                class="capitalize"
+            />
+            <SharedButton to="/reports/new" icon="lucide:plus">
                 Report dump
-            </NuxtLink>
+            </SharedButton>
         </div>
 
         <p
@@ -152,22 +143,16 @@ async function onStatus(report: DumpReport, event: Event) {
                                     }"
                                     aria-hidden="true"
                                 />
-                                <select
+                                <SharedSelect
                                     v-if="canModerate"
-                                    :value="r.status"
+                                    :model-value="r.status"
+                                    :options="statusOptions"
+                                    size="sm"
                                     :disabled="saving.has(r.id)"
                                     :aria-label="`Status of report #${r.id}`"
-                                    class="h-8 rounded-md border border-zinc-300 bg-white px-2 text-sm text-zinc-900 capitalize focus:border-emerald-600 focus:ring-4 focus:ring-emerald-600/15 focus:outline-none disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
-                                    @change="onStatus(r, $event)"
-                                >
-                                    <option
-                                        v-for="s in REPORT_STATUSES"
-                                        :key="s"
-                                        :value="s"
-                                    >
-                                        {{ s }}
-                                    </option>
-                                </select>
+                                    class="capitalize"
+                                    @update:model-value="updateStatus(r, $event)"
+                                />
                                 <span
                                     v-else
                                     class="font-medium text-zinc-800 capitalize dark:text-zinc-100"
@@ -219,16 +204,13 @@ async function onStatus(report: DumpReport, event: Event) {
         </p>
 
         <div v-if="nextCursor && !error" class="mt-4 flex justify-center">
-            <button
-                type="button"
-                class="inline-flex h-9 items-center gap-1.5 rounded-lg px-4 text-sm font-medium text-zinc-700 ring-1 ring-zinc-900/10 transition hover:bg-zinc-900/5 focus-visible:ring-4 focus-visible:ring-emerald-600/25 focus-visible:outline-none disabled:opacity-60 dark:text-zinc-200 dark:ring-white/10 dark:hover:bg-white/10"
-                :disabled="loadingMore"
-                :aria-busy="loadingMore"
+            <SharedButton
+                variant="secondary"
+                :loading="loadingMore"
                 @click="loadMore"
             >
-                <AppLoader v-if="loadingMore" size="sm" :delay="0" />
                 {{ loadingMore ? "Loading…" : "Load more" }}
-            </button>
+            </SharedButton>
         </div>
     </div>
 </template>

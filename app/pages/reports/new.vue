@@ -134,9 +134,6 @@ async function submit() {
         submitting.value = false;
     }
 }
-
-const field =
-    "block w-full rounded-lg border bg-white px-3.5 py-2.5 text-sm text-zinc-900 shadow-xs transition placeholder:text-zinc-400 focus:ring-4 focus:outline-none dark:bg-zinc-900 dark:text-zinc-100";
 </script>
 
 <template>
@@ -192,24 +189,14 @@ const field =
                     >
                         {{ coords ?? "No spot picked yet" }}
                     </p>
-                    <button
-                        type="button"
-                        class="inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-medium text-zinc-700 ring-1 ring-zinc-900/10 transition hover:bg-zinc-900/5 focus-visible:ring-4 focus-visible:ring-emerald-600/25 focus-visible:outline-none disabled:opacity-60 dark:text-zinc-200 dark:ring-white/10 dark:hover:bg-white/10"
-                        :disabled="locating"
+                    <SharedButton
+                        variant="secondary"
+                        icon="lucide:locate-fixed"
+                        :loading="locating"
                         @click="useMyLocation"
                     >
-                        <AppLoader
-                            v-if="locating"
-                            size="sm"
-                            :delay="0"
-                        />
-                        <Icon
-                            v-else
-                            name="lucide:locate-fixed"
-                            class="size-4"
-                        />
                         {{ locating ? "Locating…" : "Use my location" }}
-                    </button>
+                    </SharedButton>
                 </div>
                 <p
                     v-if="fieldErrors.location"
@@ -225,26 +212,14 @@ const field =
                 </p>
             </div>
 
-            <div>
-                <label
-                    for="description"
-                    class="mb-1.5 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-                >
-                    What did you find?
-                </label>
-                <textarea
+            <SharedField id="description" label="What did you find?">
+                <SharedTextarea
                     id="description"
                     v-model="description"
                     rows="5"
                     :maxlength="MAX"
                     placeholder="e.g. Old mattress and bags of rubble next to the bus stop"
-                    :class="[
-                        field,
-                        fieldErrors.description
-                            ? 'border-red-500 focus:ring-red-500/15'
-                            : 'border-zinc-300 focus:border-emerald-600 focus:ring-emerald-600/15 dark:border-zinc-700',
-                    ]"
-                    :aria-invalid="!!fieldErrors.description"
+                    :invalid="!!fieldErrors.description"
                     :aria-describedby="
                         fieldErrors.description
                             ? 'description-error description-count'
@@ -272,7 +247,7 @@ const field =
                         {{ trimmed.length }} / {{ MAX }}
                     </p>
                 </div>
-            </div>
+            </SharedField>
 
             <p
                 v-if="formError"
@@ -283,25 +258,14 @@ const field =
             </p>
 
             <div class="mt-auto flex items-center justify-end gap-3 pt-2">
-                <NuxtLink
-                    to="/"
-                    class="rounded-lg px-3 py-2 text-sm font-medium text-zinc-600 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"
-                >
-                    Cancel
-                </NuxtLink>
-                <button
+                <SharedButton variant="ghost" to="/">Cancel</SharedButton>
+                <SharedButton
                     type="submit"
-                    class="inline-flex items-center gap-2 rounded-lg border-b-[3px] border-emerald-800 bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-500 focus-visible:ring-4 focus-visible:ring-emerald-600/30 focus-visible:outline-none active:translate-y-px active:border-b disabled:cursor-not-allowed disabled:opacity-60"
                     :disabled="!canSubmit"
-                    :aria-busy="submitting"
+                    :loading="submitting"
                 >
-                    <AppLoader
-                        v-if="submitting"
-                        size="sm"
-                        :delay="0"
-                    />
                     {{ submitting ? "Sending…" : "Send report" }}
-                </button>
+                </SharedButton>
             </div>
         </form>
     </div>

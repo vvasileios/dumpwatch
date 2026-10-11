@@ -81,12 +81,6 @@ function backToCredentials() {
     error.value = "";
 }
 
-const input =
-    "block w-full rounded-lg border border-zinc-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 shadow-xs transition placeholder:text-zinc-400 focus:border-emerald-600 focus:ring-4 focus:ring-emerald-600/15 focus:outline-none dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:focus:border-emerald-500";
-const checkbox =
-    "size-4 rounded border-zinc-300 accent-emerald-600 dark:border-zinc-600";
-const button =
-    "inline-flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 focus-visible:ring-4 focus-visible:ring-emerald-600/30 focus-visible:outline-none active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-70";
 </script>
 
 <template>
@@ -156,80 +150,55 @@ const button =
                         novalidate
                         @submit.prevent="signIn"
                     >
-                        <div>
-                            <label
-                                for="email"
-                                class="mb-1.5 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-                                >Email</label
-                            >
-                            <input
+                        <SharedField id="email" label="Email">
+                            <SharedInput
                                 id="email"
-                                v-model.trim="email"
+                                v-model="email"
                                 type="email"
                                 autocomplete="username"
                                 inputmode="email"
                                 required
                                 autofocus
                                 placeholder="you@example.com"
-                                :class="input"
-                                :aria-invalid="!!error"
+                                :invalid="!!error"
                                 aria-describedby="form-error"
                             />
-                        </div>
+                        </SharedField>
 
-                        <div>
-                            <label
-                                for="password"
-                                class="mb-1.5 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-                                >Password</label
+                        <SharedField id="password" label="Password">
+                            <SharedInput
+                                id="password"
+                                v-model="password"
+                                :type="showPassword ? 'text' : 'password'"
+                                autocomplete="current-password"
+                                required
+                                placeholder="••••••••"
+                                :invalid="!!error"
+                                aria-describedby="form-error"
                             >
-                            <div class="relative">
-                                <input
-                                    id="password"
-                                    v-model="password"
-                                    :type="showPassword ? 'text' : 'password'"
-                                    autocomplete="current-password"
-                                    required
-                                    placeholder="••••••••"
-                                    :class="[input, 'pr-11']"
-                                    :aria-invalid="!!error"
-                                    aria-describedby="form-error"
-                                />
-                                <button
-                                    type="button"
-                                    class="absolute inset-y-0 right-0 grid w-11 place-items-center rounded-r-lg text-zinc-400 transition hover:text-zinc-600 focus-visible:text-emerald-600 focus-visible:outline-none dark:hover:text-zinc-200"
-                                    :aria-label="
-                                        showPassword
-                                            ? 'Hide password'
-                                            : 'Show password'
-                                    "
-                                    :aria-pressed="showPassword"
-                                    @click="showPassword = !showPassword"
-                                >
-                                    <Icon
-                                        v-if="!showPassword"
-                                        name="lucide:eye"
-                                        class="size-5"
+                                <template #trailing>
+                                    <SharedIconButton
+                                        size="sm"
+                                        :icon="
+                                            showPassword
+                                                ? 'lucide:eye-off'
+                                                : 'lucide:eye'
+                                        "
+                                        :label="
+                                            showPassword
+                                                ? 'Hide password'
+                                                : 'Show password'
+                                        "
+                                        :aria-pressed="showPassword"
+                                        @click="showPassword = !showPassword"
                                     />
-                                    <Icon
-                                        v-else
-                                        name="lucide:eye-off"
-                                        class="size-5"
-                                    />
-                                </button>
-                            </div>
-                        </div>
+                                </template>
+                            </SharedInput>
+                        </SharedField>
 
-                        <label
-                            class="flex cursor-pointer items-center gap-2.5 text-sm text-zinc-600 select-none dark:text-zinc-400"
-                        >
-                            <input
-                                v-model="rememberMe"
-                                type="checkbox"
-                                :class="checkbox"
-                            />
+                        <SharedCheckbox v-model="rememberMe">
                             Keep me signed in
-                        </label>
+                        </SharedCheckbox>
 
                         <p
                             v-if="error"
@@ -244,19 +213,15 @@ const button =
                             {{ error }}
                         </p>
 
-                        <button
+                        <SharedButton
                             type="submit"
-                            :class="button"
-                            :disabled="loading || !email || !password"
-                            :aria-busy="loading"
+                            size="lg"
+                            block
+                            :disabled="!email || !password"
+                            :loading="loading"
                         >
-                            <AppLoader
-                                v-if="loading"
-                                size="sm"
-                                :delay="0"
-                            />
                             {{ loading ? "Signing in…" : "Sign in" }}
-                        </button>
+                        </SharedButton>
                     </form>
                 </template>
 
@@ -275,39 +240,27 @@ const button =
                         novalidate
                         @submit.prevent="verifyCode"
                     >
-                        <div>
-                            <label for="code" class="sr-only"
-                                >Authentication code</label
-                            >
-                            <input
-                                id="code"
-                                v-model="code"
-                                type="text"
-                                inputmode="numeric"
-                                autocomplete="one-time-code"
-                                maxlength="6"
-                                autofocus
-                                placeholder="000000"
-                                :class="[
-                                    input,
-                                    'text-center font-mono text-2xl tracking-[0.5em]',
-                                ]"
-                                :aria-invalid="!!error"
-                                aria-describedby="form-error"
-                                @input="onCodeInput"
-                            />
-                        </div>
+                        <input
+                            v-model="code"
+                            type="text"
+                            inputmode="numeric"
+                            autocomplete="one-time-code"
+                            maxlength="6"
+                            autofocus
+                            placeholder="000000"
+                            aria-label="Authentication code"
+                            :class="[
+                                fieldClass(!!error),
+                                'block w-full px-3.5 py-2.5 text-center font-mono text-2xl tracking-[0.5em]',
+                            ]"
+                            :aria-invalid="!!error"
+                            aria-describedby="form-error"
+                            @input="onCodeInput"
+                        />
 
-                        <label
-                            class="flex cursor-pointer items-center gap-2.5 text-sm text-zinc-600 select-none dark:text-zinc-400"
-                        >
-                            <input
-                                v-model="trustDevice"
-                                type="checkbox"
-                                :class="checkbox"
-                            />
+                        <SharedCheckbox v-model="trustDevice">
                             Trust this device for 30 days
-                        </label>
+                        </SharedCheckbox>
 
                         <p
                             v-if="error"
@@ -318,27 +271,23 @@ const button =
                             {{ error }}
                         </p>
 
-                        <button
+                        <SharedButton
                             type="submit"
-                            :class="button"
-                            :disabled="loading || code.length !== 6"
-                            :aria-busy="loading"
+                            size="lg"
+                            block
+                            :disabled="code.length !== 6"
+                            :loading="loading"
                         >
-                            <AppLoader
-                                v-if="loading"
-                                size="sm"
-                                :delay="0"
-                            />
                             {{ loading ? "Verifying…" : "Verify" }}
-                        </button>
+                        </SharedButton>
 
-                        <button
-                            type="button"
-                            class="w-full text-center text-sm font-medium text-zinc-500 transition hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200"
+                        <SharedButton
+                            variant="ghost"
+                            block
                             @click="backToCredentials"
                         >
                             ← Use a different account
-                        </button>
+                        </SharedButton>
                     </form>
                 </template>
             </div>

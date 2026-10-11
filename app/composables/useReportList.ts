@@ -52,6 +52,8 @@ export async function useReportList() {
     }
 
     async function updateStatus(report: DumpReport, status: ReportStatus) {
+        const previous = report.status;
+        report.status = status;
         saving.value.add(report.id);
         actionError.value = null;
         try {
@@ -64,6 +66,7 @@ export async function useReportList() {
             return true;
         } catch (err) {
             console.error(err);
+            report.status = previous;
             actionError.value = `Couldn't update report #${report.id}. Try again.`;
             return false;
         } finally {
