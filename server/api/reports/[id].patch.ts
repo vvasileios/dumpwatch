@@ -12,7 +12,7 @@ export default defineEventHandler(async (event): Promise<DumpReport> => {
     await requirePermission(event, { report: ["update"] });
     const { id } = await getValidatedRouterParams(
         event,
-        z.object({ id: z.string().regex(/^\d+$/) }).parse,
+        z.object({ id: z.string().regex(/^\d{1,18}$/) }).parse,
     );
 
     const { status } = await readValidatedBody(

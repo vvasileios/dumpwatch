@@ -17,3 +17,9 @@ export interface DumpReport {
     reported_at: string;
     cleared_at: string | null;
 }
+
+export interface DumpReportList {
+    reports: DumpReport[];
+    nextCursor: string | null;
+    canModerate: boolean;
+}

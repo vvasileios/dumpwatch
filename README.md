@@ -102,6 +102,26 @@ Warm session, JIT off. Run with `make -s sql f=db/queries/05_explain_nearby.sql`
 ```
 </details>
 
+## Report list paging
+
+`GET /api/reports/list` pages with a keyset cursor on `(reported_at, id)`, newest first, 25 per page.
+Run with `make -s sql f=db/queries/08_report_list.sql`: it adds 100,000 reports inside a transaction, explains, then rolls back. Plans are in `db/explain/q8_report_list.txt`.
+
+| Case | Plan | Rows read | Time |
+| --- | --- | --- | --- |
+| Staff, first page | Index Scan Backward `(reported_at, id)` | 26 | 0.02 ms |
+| Staff, page 201, keyset cursor | Index Scan Backward, row comparison in Index Cond | 26 | 0.02 ms |
+| Staff, page 201, `OFFSET 5000` | Index Scan Backward, skips 5,000 rows | 5,026 | 1.1 ms |
+| Staff, `status = open`, page 201 | Index Scan Backward `(reported_at, id)` + Filter | 78 | 0.02 ms |
+| Citizen, first page | Index Scan Backward `(reported_by, reported_at, id)` | 26 | 0.04 ms |
+| Citizen, generic plan | Index Scan Backward + Filter on every condition | 26,494 | 1.9 ms |
+| Staff, first page, no list indexes | Parallel Seq Scan + top-N sort | 100,500 | 20 ms |
+
+- Keyset cost stays flat on any page; `OFFSET` (same WHERE clause) reads and throws away every skipped row, so it grows with page depth.
+- The cursor is only an id. The query looks up its `(reported_at, id)` in SQL (scoped to the same reporter for citizens), because a JS `Date` keeps milliseconds and a millisecond cursor would skip rows.
+- With a status that matches a third of the rows, filtering the time index is cheaper; when the status is rare (about 1% of rows), the planner uses `(status, reported_at, id)` with the whole keyset condition in the Index Cond.
+- `$2 IS NULL OR status = $2` is fine because `pg` sends unnamed statements, which Postgres plans with the real values. A reused named statement can get a generic plan, and then every condition becomes a filter.
+
 ## Editor types
 
 `node_modules` lives in a Docker volume. For editor autocomplete, run `npm install` on the host once (optional).
