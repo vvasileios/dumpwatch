@@ -4,7 +4,7 @@ export HOST_GID := $(shell id -g)
 APP_URL := http://localhost:3000
 OPEN := $(shell command -v wslview || command -v xdg-open || command -v open || command -v explorer.exe)
 
-.PHONY: up down build logs sh psql install reset sql typecheck
+.PHONY: up down build logs sh psql install reset sql typecheck skills
 sql:
 	$(if $(f),,$(error usage: make sql f=db/queries/01_nearby.sql))
 	docker compose exec -T db sh -c 'psql -U $$POSTGRES_USER -d $$POSTGRES_DB -v ON_ERROR_STOP=1' < $(f)
@@ -42,3 +42,8 @@ reset:
 
 typecheck:
 	docker compose exec app npx nuxt typecheck
+
+skills:
+	@mkdir -p .claude/skills
+	@for d in .agents/skills/*/; do n=$$(basename $$d); ln -sfn ../../.agents/skills/$$n .claude/skills/$$n; done
+	@find .claude/skills -xtype l -print -delete

@@ -25,6 +25,7 @@ Opens http://localhost:3000. Sign in with `ADMIN_EMAIL` / `ADMIN_PASSWORD` from 
 | `make psql`            | psql into the database                            |
 | `make install pkg=foo` | add an npm package (use this, not host `npm i`)   |
 | `make typecheck`       | type-check app and server (vue-tsc)               |
+| `make skills`          | link `.agents/skills` into `.claude/skills`       |
 | `make reset`           | delete DB + node_modules volumes (all data lost)  |
 
 ## Layout
