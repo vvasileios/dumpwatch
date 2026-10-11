@@ -4,10 +4,26 @@ export HOST_GID := $(shell id -g)
 APP_URL := http://localhost:3000
 OPEN := $(shell command -v wslview || command -v xdg-open || command -v open || command -v explorer.exe)
 
-.PHONY: up down build logs sh psql install reset sql typecheck skills
+.PHONY: up down build logs sh psql install reset sql typecheck skills migrate migration rollback migrate-status seed
 sql:
 	$(if $(f),,$(error usage: make sql f=db/queries/01_nearby.sql))
 	docker compose exec -T db sh -c 'psql -U $$POSTGRES_USER -d $$POSTGRES_DB -v ON_ERROR_STOP=1' < $(f)
+
+migrate:
+	docker compose run --rm migrate up
+
+migration:
+	$(if $(name),,$(error usage: make migration name=add_report_photos))
+	docker compose run --rm migrate new $(name)
+
+rollback:
+	docker compose run --rm migrate rollback
+
+migrate-status:
+	docker compose run --rm migrate status
+
+seed:
+	docker compose exec -T db sh -c 'psql -U $$POSTGRES_USER -d $$POSTGRES_DB -v ON_ERROR_STOP=1 --single-transaction' < db/seed.sql
 
 up:
 	docker compose up -d --build

@@ -9,7 +9,6 @@ services:
             - "127.0.0.1:5432:5432"
         volumes:
             - pgdata:/var/lib/postgresql
-            - ./db/init:/docker-entrypoint-initdb.d:ro
         healthcheck:
             test:
                 [
@@ -20,6 +19,20 @@ services:
             start_period: 30s
             start_interval: 1s
             retries: 10
+
+    migrate:
+        image: ghcr.io/amacneil/dbmate:2.36.0
+        user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
+        environment:
+            DATABASE_URL: postgres://${POSTGRES_USER:-dumpwatch}:${POSTGRES_PASSWORD:-dumpwatch}@db:5432/${POSTGRES_DB:-dumpwatch}?sslmode=disable
+            DBMATE_MIGRATIONS_DIR: /db/migrations
+            DBMATE_SCHEMA_FILE: /db/schema.sql
+        volumes:
+            - ./db:/db
+        command: ["--wait", "up"]
+        depends_on:
+            db:
+                condition: service_healthy
 
     app:
         build: .
@@ -38,8 +51,8 @@ services:
             - .:/app
             - node_modules:/app/node_modules
         depends_on:
-            db:
-                condition: service_healthy
+            migrate:
+                condition: service_completed_successfully
 
 volumes:
     pgdata:

@@ -30,6 +30,10 @@ make down | logs | sh | psql
 make install pkg="foo"        # the only way to add a package
 make sql f=db/queries/01_nearby.sql   # run a SQL file (ON_ERROR_STOP)
 make typecheck                # nuxt typecheck (vue-tsc); run before every commit
+make migrate                  # apply pending migrations (also runs automatically on make up)
+make migration name=add_x     # new db/migrations/<timestamp>_add_x.sql (-- migrate:up / -- migrate:down)
+make rollback                 # run the latest migration's down
+make seed                     # load sample data into an empty DB (refuses if zones has rows)
 make reset                    # DESTRUCTIVE: deletes DB and node_modules volumes
 ```
 
@@ -48,7 +52,8 @@ make reset                    # DESTRUCTIVE: deletes DB and node_modules volumes
 | API | `server/api/**` file routes (`name.get.ts`, `[id].patch.ts`); SQL lives in the handler as a `const` string |
 | Server helpers | `server/utils/` (`db()`, auth guards, `isInServiceArea`) |
 | Types and limits used on both sides | `shared/types/`, `shared/utils/` |
-| Schema and seed | `db/init/` (fresh DB only) |
+| Schema | `db/migrations/` (dbmate, applied in order); `db/schema.sql` is the generated current schema, never edit it |
+| Sample data | `db/seed.sql` (`make seed`) |
 | Hand-written and EXPLAIN queries | `db/queries/NN_name.sql`, saved plans in `db/explain/` |
 
 `server/utils` is auto-imported only in Nitro, but its types leak into the app typecheck: client code that uses it passes `make typecheck` and crashes at runtime. Put client helpers in `app/utils`, shared ones in `shared/utils`.
@@ -79,7 +84,7 @@ make reset                    # DESTRUCTIVE: deletes DB and node_modules volumes
 - **Coordinate order:** PostGIS `ST_MakePoint(lng, lat)`, `ST_MakeEnvelope(minLng, minLat, maxLng, maxLat, 4326)`; Leaflet `[lat, lng]`. Parameter arrays are always `[lng, lat, …]`.
 - Radius filters use `ST_DWithin` (index-backed), never `ST_Distance(...) < x`. KNN `<->` for "closest N".
 - Points must be inside the service area (`isInServiceArea`); the sea is outside.
-- Schema changes: edit `db/init/` and ask the user to run `make reset` (wipes data). There are no migrations yet. See the `postgis-queries` skill for EXPLAIN work.
+- Schema changes: `make migration name=…`, write `up` and `down`, `make migrate`, check `make rollback` + `make migrate` round-trips. Never edit a migration that has been applied; add a new one. Better Auth tables are in migrations too: if its startup check prints SQL (new plugin/upgrade), put that SQL in a migration. See the `postgis-queries` skill for EXPLAIN work.
 
 ## Frontend rules
 
@@ -97,7 +102,7 @@ make reset                    # DESTRUCTIVE: deletes DB and node_modules volumes
 ## Before you finish
 
 - Code change: `make typecheck`, then run what you changed (curl / psql / browser). Report what you ran and what you couldn't.
-- `db/init` change: tell the user it needs `make reset`; the first start after a reset logs one harmless Better Auth "Database schema mismatch".
+- New migration: run `make migrate` and the rollback round-trip; commit `db/schema.sql` with it.
 - Added a route, composable, component, endpoint, or table: update [docs/architecture.md](docs/architecture.md).
 - Remove test users and reports you created.
 - End of session: update [docs/PROGRESS.md](docs/PROGRESS.md).

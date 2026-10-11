@@ -20,7 +20,7 @@ Reading code is not a review. Run it.
 | `server/api/**` | API checks (step 2) |
 | SQL / `db/queries` | `make sql f=...`, results in `make psql` |
 | `app/pages`, components, composables | browser checks (step 3) |
-| `db/init` | can't apply without `make reset`; say so and ask |
+| `db/migrations` | `make migrate`, then `make rollback` + `make migrate` (down works); check `db/schema.sql` diff |
 | Docs only | check links and paths exist |
 
 ## 2. API checks

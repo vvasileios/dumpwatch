@@ -1,3 +1,10 @@
+DO $$
+BEGIN
+	IF EXISTS (SELECT 1 FROM zones) THEN
+		RAISE EXCEPTION 'Sample data is already loaded (zones is not empty).';
+	END IF;
+END $$;
+
 SELECT	setseed(0.42);
 
 INSERT INTO zones (name, boundary) VALUES

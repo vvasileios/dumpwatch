@@ -1,3 +1,4 @@
+-- migrate:up
 CREATE TABLE zones (
 	id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 	name text NOT NULL,
@@ -34,3 +35,6 @@ CREATE INDEX dump_reports_reported_at_id_idx ON dump_reports (reported_at, id);
 CREATE INDEX dump_reports_status_reported_at_id_idx ON dump_reports (status, reported_at, id);
 CREATE INDEX dump_reports_reported_by_reported_at_id_idx ON dump_reports (reported_by, reported_at, id);
 CREATE INDEX dump_reports_description_trgm_idx ON dump_reports USING gin (description gin_trgm_ops);
+
+-- migrate:down
+DROP TABLE dump_reports, collection_points, zones;

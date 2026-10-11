@@ -26,6 +26,10 @@ Opens http://localhost:3000. Sign in with `ADMIN_EMAIL` / `ADMIN_PASSWORD` from 
 | `make install pkg=foo` | add an npm package (use this, not host `npm i`)   |
 | `make typecheck`       | type-check app and server (vue-tsc)               |
 | `make skills`          | link `.agents/skills` into `.claude/skills`       |
+| `make migrate`         | apply pending migrations (`make up` does it too)  |
+| `make migration name=x`| new migration file in `db/migrations/`            |
+| `make rollback`        | undo the latest migration                         |
+| `make seed`            | load sample zones, points, reports (empty DB)     |
 | `make reset`           | delete DB + node_modules volumes (all data lost)  |
 
 ## Layout
@@ -34,9 +38,9 @@ Opens http://localhost:3000. Sign in with `ADMIN_EMAIL` / `ADMIN_PASSWORD` from 
 - `app/components/` — `MapView.client.vue` (Leaflet), `AppLoader.vue` (shared loader)
 - `server/api/` — Nitro routes; `server/api/auth/[...all].ts` is Better Auth
 - `server/utils/` — `db()` pg pool, `auth` + `requirePermission(event, { report: ["delete"] })`
-- `server/plugins/auth-bootstrap.ts` — creates auth tables and seeds the admin on startup
+- `server/plugins/auth-bootstrap.ts` — checks the Better Auth schema and seeds the admin on startup
 - `shared/utils/permissions.ts` — roles and permissions (used by client and server)
-- `db/init/` — SQL run only on a fresh database; after changing it, `make reset`
+- `db/migrations/` — schema changes (dbmate); `db/schema.sql` — generated current schema; `db/seed.sql` — sample data (`make seed`)
 
 ## Database
 
