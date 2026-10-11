@@ -21,19 +21,22 @@ Pattern: state lives in a composable, components draw state and emit events, eve
 ```
 app/
   pages/index.vue              map + nearby panel (slice 6) + reports layer (7c)
-  pages/reports/new.vue        report form (7b)
-  pages/reports/index.vue      report list (7d): own for citizens, all + status select for staff; one-shot "Report sent" banner
+  pages/reports/new.vue        report form (7b): map + <ReportsForm>, state in useReportForm
+  pages/reports/index.vue      report list (7d): own for citizens, all + status select for staff; one-shot "Report sent" banner; rows in <ReportsTable>
   pages/collection-points.vue, zones.vue   staff-only placeholders (roles via definePageMeta)
   pages/login.vue              layout: false
   layouts/default.vue          menubar + window frame (maximize = full-bleed)
   middleware/auth.global.ts    fetches session → useState("session"); redirects; checks meta.roles
   composables/useNearby.ts     nearby state + fetch (abort, request counter)
-  composables/useReportList.ts list state: first page via useFetch (SSR), Load more via $fetch keyset cursor, PATCH status
+  composables/useReportList.ts list state: first page via useFetch (SSR), Load more via $fetch keyset cursor, PATCH status (optimistic, reverts on error)
+  composables/useReportForm.ts report form state: draft save/restore on 401, geolocation race guard, error mapping, submit
   composables/useReports.ts    reports layer: watch [show, bbox] → 300 ms debounce → fetch (abort); span guard
   composables/useLeafletMap.ts shared Leaflet setup (tiles, view, zoom, unmount-safe, ResizeObserver)
   components/                  MapView.client.vue, LocationPicker.client.vue, NearbyPanel.vue,
                                ReportsLayerCard.vue (v-model:show), AppMenubar.vue,
                                AppCommandPalette.vue (Cmd/Ctrl+K), AppLoader.vue, AppEmptyState.vue
+  components/reports/          ReportsTable.vue (rows, emits status), ReportsForm.vue (v-model:description, emits locate/submit);
+                               file names start with the folder name so Nuxt dedupes the prefix (<ReportsTable>, not <ReportsReportsTable>)
   components/shared/           UI kit, auto-imported as <SharedX>: Button (primary/secondary/ghost,
                                `to` renders NuxtLink, `loading`/`icon`), IconButton (required label),
                                Field (label), Input (trailing slot), Textarea, Select (typed options),

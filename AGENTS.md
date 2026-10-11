@@ -57,6 +57,7 @@ make reset                    # DESTRUCTIVE: deletes DB and node_modules volumes
 
 - 4-space indent, double quotes, semicolons. The user's formatter may reflow files.
 - `<script setup lang="ts">`, Composition API.
+- Feature components: `app/components/<feature>/<Feature>Name.vue` (`reports/ReportsTable.vue` → `<ReportsTable>`; `reports/ReportForm.vue` would be `<ReportsReportForm>`). `make typecheck` doesn't flag an unresolved tag; check it in the browser.
 - Don't name types after DOM globals (`Report`, `Event`, `Location`): the browser type wins in `app/`. Existing names: `DumpReport`, `NearbyPoint`.
 - Shared limits (`REPORTS_PAGE_SIZE`, `REPORT_DESCRIPTION`, …) live in `shared/utils` and are used by both the Zod schema and the UI.
 
