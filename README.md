@@ -105,7 +105,7 @@ Warm session, JIT off. Run with `make -s sql f=db/queries/05_explain_nearby.sql`
 
 ## Report list paging
 
-`GET /api/reports/list` pages with a keyset cursor on `(reported_at, id)`, newest first, 25 per page.
+`GET /api/reports/list` first paged with a keyset cursor on `(reported_at, id)`; the numbers below are from that version. It now uses page numbers (`OFFSET` + `count(*)`) with search; that experiment is `db/queries/09_report_search.sql`, plans in `db/explain/q9_report_search.txt`.
 Run with `make -s sql f=db/queries/08_report_list.sql`: it adds 100,000 reports inside a transaction, explains, then rolls back. Plans are in `db/explain/q8_report_list.txt`.
 
 | Case | Plan | Rows read | Time |

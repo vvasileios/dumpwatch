@@ -1,6 +1,8 @@
-import type { REPORT_STATUSES } from "../utils/reports";
+import type { REPORT_SORTS, REPORT_STATUSES } from "../utils/reports";
 
 export type ReportStatus = (typeof REPORT_STATUSES)[number];
+export type ReportSort = (typeof REPORT_SORTS)[number];
+export type SortDir = "asc" | "desc";
 export type Bbox = [
     minLng: number,
     minLat: number,
@@ -20,6 +22,7 @@ export interface DumpReport {
 
 export interface DumpReportList {
     reports: DumpReport[];
-    nextCursor: string | null;
+    total: number;
+    page: number;
     canModerate: boolean;
 }

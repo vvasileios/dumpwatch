@@ -33,3 +33,4 @@ CREATE INDEX dump_reports_location_gix ON dump_reports USING gist (location);
 CREATE INDEX dump_reports_reported_at_id_idx ON dump_reports (reported_at, id);
 CREATE INDEX dump_reports_status_reported_at_id_idx ON dump_reports (status, reported_at, id);
 CREATE INDEX dump_reports_reported_by_reported_at_id_idx ON dump_reports (reported_by, reported_at, id);
+CREATE INDEX dump_reports_description_trgm_idx ON dump_reports USING gin (description gin_trgm_ops);

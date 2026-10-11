@@ -1,0 +1,165 @@
+SET
+SET
+BEGIN
+INSERT 0 100000
+ANALYZE
+PREPARE
+PREPARE
+== 1. staff, total count, no filter
+                                                         QUERY PLAN                                                         
+----------------------------------------------------------------------------------------------------------------------------
+ Aggregate  (cost=2846.29..2846.30 rows=1 width=4) (actual time=6.213..6.213 rows=1.00 loops=1)
+   Buffers: shared hit=1590
+   ->  Seq Scan on dump_reports  (cost=0.00..2595.03 rows=100503 width=0) (actual time=0.001..3.854 rows=100503.00 loops=1)
+         Buffers: shared hit=1590
+ Planning:
+   Buffers: shared hit=1
+ Planning Time: 0.040 ms
+ Execution Time: 6.220 ms
+(8 rows)
+
+== 2. staff, page 1 rows
+                                                                                QUERY PLAN                                                                                 
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=0.42..3.53 rows=25 width=73) (actual time=0.014..0.030 rows=25.00 loops=1)
+   Buffers: shared hit=21
+   ->  Index Scan Backward using dump_reports_reported_at_id_idx on dump_reports  (cost=0.42..12529.00 rows=100503 width=73) (actual time=0.013..0.028 rows=25.00 loops=1)
+         Index Searches: 1
+         Buffers: shared hit=21
+ Planning:
+   Buffers: shared hit=53
+ Planning Time: 0.107 ms
+ Execution Time: 0.063 ms
+(9 rows)
+
+== 3. staff, page 201 rows (OFFSET 5000)
+                                                                                 QUERY PLAN                                                                                  
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=623.71..626.83 rows=25 width=73) (actual time=1.164..1.170 rows=25.00 loops=1)
+   Buffers: shared hit=521
+   ->  Index Scan Backward using dump_reports_reported_at_id_idx on dump_reports  (cost=0.42..12529.00 rows=100503 width=73) (actual time=0.005..1.067 rows=5025.00 loops=1)
+         Index Searches: 1
+         Buffers: shared hit=521
+ Planning Time: 0.040 ms
+ Execution Time: 1.175 ms
+(7 rows)
+
+== 4. staff, count, rare search "asbestos" (100 rows)
+                                                                       QUERY PLAN                                                                        
+---------------------------------------------------------------------------------------------------------------------------------------------------------
+ Aggregate  (cost=2481.17..2481.19 rows=1 width=4) (actual time=2.064..2.064 rows=1.00 loops=1)
+   Buffers: shared hit=617
+   ->  Bitmap Heap Scan on dump_reports  (cost=2198.83..2480.96 rows=87 width=0) (actual time=1.998..2.060 rows=100.00 loops=1)
+         Recheck Cond: (description ~~* '%asbestos%'::text)
+         Heap Blocks: exact=100
+         Buffers: shared hit=617
+         ->  Bitmap Index Scan on dump_reports_description_trgm_idx  (cost=0.00..2198.81 rows=87 width=0) (actual time=1.988..1.989 rows=100.00 loops=1)
+               Index Cond: (description ~~* '%asbestos%'::text)
+               Index Searches: 1
+               Buffers: shared hit=517
+ Planning:
+   Buffers: shared hit=1
+ Planning Time: 0.053 ms
+ Execution Time: 2.071 ms
+(14 rows)
+
+== 5. staff, page 1 rows, rare search "asbestos"
+                                                                          QUERY PLAN                                                                           
+---------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=2484.28..2484.34 rows=25 width=73) (actual time=1.973..1.975 rows=25.00 loops=1)
+   Buffers: shared hit=617
+   ->  Sort  (cost=2484.28..2484.50 rows=87 width=73) (actual time=1.973..1.974 rows=25.00 loops=1)
+         Sort Key: reported_at DESC, id DESC
+         Sort Method: top-N heapsort  Memory: 31kB
+         Buffers: shared hit=617
+         ->  Bitmap Heap Scan on dump_reports  (cost=2198.83..2481.83 rows=87 width=73) (actual time=1.876..1.947 rows=100.00 loops=1)
+               Recheck Cond: (description ~~* '%asbestos%'::text)
+               Heap Blocks: exact=100
+               Buffers: shared hit=617
+               ->  Bitmap Index Scan on dump_reports_description_trgm_idx  (cost=0.00..2198.81 rows=87 width=0) (actual time=1.868..1.868 rows=100.00 loops=1)
+                     Index Cond: (description ~~* '%asbestos%'::text)
+                     Index Searches: 1
+                     Buffers: shared hit=517
+ Planning:
+   Buffers: shared hit=1
+ Planning Time: 0.051 ms
+ Execution Time: 1.981 ms
+(18 rows)
+
+== 6. staff, count, common search "fridge" (12,500 rows)
+                                                        QUERY PLAN                                                         
+---------------------------------------------------------------------------------------------------------------------------
+ Aggregate  (cost=2877.90..2877.91 rows=1 width=4) (actual time=26.376..26.376 rows=1.00 loops=1)
+   Buffers: shared hit=1590
+   ->  Seq Scan on dump_reports  (cost=0.00..2846.29 rows=12643 width=0) (actual time=0.092..26.075 rows=12402.00 loops=1)
+         Filter: (description ~~* '%fridge%'::text)
+         Rows Removed by Filter: 88101
+         Buffers: shared hit=1590
+ Planning:
+   Buffers: shared hit=1
+ Planning Time: 0.038 ms
+ Execution Time: 26.382 ms
+(10 rows)
+
+== 7. staff, count, search "4242" (number: description or id)
+                                                                         QUERY PLAN                                                                         
+------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Aggregate  (cost=2154.98..2155.00 rows=1 width=4) (actual time=0.989..0.990 rows=1.00 loops=1)
+   Buffers: shared hit=506
+   ->  Bitmap Heap Scan on dump_reports  (cost=2150.97..2154.98 rows=1 width=0) (actual time=0.988..0.989 rows=0.00 loops=1)
+         Recheck Cond: ((description ~~* '%4242%'::text) OR (id = '4242'::bigint))
+         Buffers: shared hit=506
+         ->  BitmapOr  (cost=2150.97..2150.97 rows=1 width=0) (actual time=0.987..0.987 rows=0.00 loops=1)
+               Buffers: shared hit=506
+               ->  Bitmap Index Scan on dump_reports_description_trgm_idx  (cost=0.00..2146.54 rows=1 width=0) (actual time=0.979..0.979 rows=0.00 loops=1)
+                     Index Cond: (description ~~* '%4242%'::text)
+                     Index Searches: 1
+                     Buffers: shared hit=503
+               ->  Bitmap Index Scan on dump_reports_pkey  (cost=0.00..4.43 rows=1 width=0) (actual time=0.008..0.008 rows=0.00 loops=1)
+                     Index Cond: (id = '4242'::bigint)
+                     Index Searches: 1
+                     Buffers: shared hit=3
+ Planning:
+   Buffers: shared hit=1
+ Planning Time: 0.053 ms
+ Execution Time: 0.997 ms
+(19 rows)
+
+== 8. citizen, count, search "fridge"
+                                                                           QUERY PLAN                                                                            
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Aggregate  (cost=330.80..330.82 rows=1 width=4) (actual time=0.070..0.070 rows=1.00 loops=1)
+   Buffers: shared hit=104
+   ->  Bitmap Heap Scan on dump_reports  (cost=13.16..330.77 rows=12 width=0) (actual time=0.069..0.070 rows=0.00 loops=1)
+         Recheck Cond: (reported_by = 'bench-user-7'::text)
+         Filter: (description ~~* '%fridge%'::text)
+         Rows Removed by Filter: 100
+         Heap Blocks: exact=100
+         Buffers: shared hit=104
+         ->  Bitmap Index Scan on dump_reports_reported_by_reported_at_id_idx  (cost=0.00..13.16 rows=99 width=0) (actual time=0.011..0.011 rows=100.00 loops=1)
+               Index Cond: (reported_by = 'bench-user-7'::text)
+               Index Searches: 1
+               Buffers: shared hit=4
+ Planning:
+   Buffers: shared hit=1
+ Planning Time: 0.041 ms
+ Execution Time: 0.073 ms
+(16 rows)
+
+== 9. staff, count, rare search, without the trigram index
+DROP INDEX
+                                                      QUERY PLAN                                                      
+----------------------------------------------------------------------------------------------------------------------
+ Aggregate  (cost=2846.51..2846.52 rows=1 width=4) (actual time=26.487..26.488 rows=1.00 loops=1)
+   Buffers: shared hit=1590
+   ->  Seq Scan on dump_reports  (cost=0.00..2846.29 rows=87 width=0) (actual time=0.358..26.482 rows=100.00 loops=1)
+         Filter: (description ~~* '%asbestos%'::text)
+         Rows Removed by Filter: 100403
+         Buffers: shared hit=1590
+ Planning:
+   Buffers: shared hit=16
+ Planning Time: 0.089 ms
+ Execution Time: 26.493 ms
+(10 rows)
+
+ROLLBACK

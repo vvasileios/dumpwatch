@@ -153,6 +153,7 @@ function backToCredentials() {
                         <SharedField id="email" label="Email">
                             <SharedInput
                                 id="email"
+                                size="lg"
                                 v-model="email"
                                 type="email"
                                 autocomplete="username"
@@ -168,6 +169,7 @@ function backToCredentials() {
                         <SharedField id="password" label="Password">
                             <SharedInput
                                 id="password"
+                                size="lg"
                                 v-model="password"
                                 :type="showPassword ? 'text' : 'password'"
                                 autocomplete="current-password"

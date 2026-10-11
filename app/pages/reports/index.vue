@@ -5,22 +5,36 @@ createdReport.value = null;
 
 const {
     reports,
-    filter,
-    nextCursor,
+    params,
+    search,
+    status,
+    size,
+    page,
+    pageCount,
+    total,
     pending,
     error,
     actionError,
-    loadingMore,
-    loadMore,
     saving,
-    updateStatus,
     canModerate,
+    goTo,
+    toggleSort,
+    clearFilters,
+    updateStatus,
 } = await useReportList();
 
+const filtered = computed(() => !!params.value.q || !!params.value.status);
+
 const empty = computed(() => {
-    if (filter.value)
+    const { q, status } = params.value;
+    if (q)
         return {
-            title: `No ${filter.value} reports`,
+            title: `No ${status ? `${status} ` : ""}reports match “${q}”`,
+            description: "Try another word or a report number like #42.",
+        };
+    if (status)
+        return {
+            title: `No ${status} reports`,
             description: "Try another status.",
         };
     if (canModerate.value)
@@ -61,20 +75,45 @@ const filterOptions = [
                 <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
                     {{
                         canModerate
-                            ? "Every report from citizens, newest first."
-                            : "Reports you sent, newest first."
+                            ? "Every report from citizens."
+                            : "Reports you sent."
                     }}
                 </p>
             </div>
+            <SharedButton to="/reports/new" icon="lucide:plus">
+                Report dump
+            </SharedButton>
+        </div>
+
+        <div role="search" class="mt-5 flex flex-wrap items-center gap-3">
+            <div class="min-w-56 flex-1">
+                <SharedInput
+                    v-model="search"
+                    type="search"
+                    placeholder="Search description or #number"
+                    aria-label="Search reports"
+                    :maxlength="REPORT_SEARCH_MAX"
+                    class="[&::-webkit-search-cancel-button]:appearance-none"
+                >
+                    <template #leading>
+                        <Icon name="lucide:search" class="size-4" />
+                    </template>
+                    <template v-if="search" #trailing>
+                        <SharedIconButton
+                            size="sm"
+                            icon="lucide:x"
+                            label="Clear search"
+                            @click="search = ''"
+                        />
+                    </template>
+                </SharedInput>
+            </div>
             <SharedSelect
-                v-model="filter"
+                v-model="status"
                 :options="filterOptions"
                 aria-label="Filter by status"
                 class="capitalize"
             />
-            <SharedButton to="/reports/new" icon="lucide:plus">
-                Report dump
-            </SharedButton>
         </div>
 
         <p
@@ -94,38 +133,50 @@ const filterOptions = [
 
         <AppEmptyState
             v-else-if="!reports.length"
-            :icon="filter ? 'lucide:filter-x' : 'lucide:flag'"
+            :icon="filtered ? 'lucide:search-x' : 'lucide:flag'"
             :title="empty.title"
             :description="empty.description"
-        />
-
-        <ReportsTable
-            v-else
-            :reports="reports"
-            :can-moderate="canModerate"
-            :saving="saving"
-            class="mt-6"
-            :class="pending && 'opacity-60'"
-            :aria-busy="pending"
-            @status="updateStatus"
-        />
-
-        <p
-            v-if="actionError"
-            role="alert"
-            class="mt-3 text-sm text-red-600 dark:text-red-400"
         >
-            {{ actionError }}
-        </p>
-
-        <div v-if="nextCursor && !error" class="mt-4 flex justify-center">
             <SharedButton
+                v-if="filtered"
                 variant="secondary"
-                :loading="loadingMore"
-                @click="loadMore"
+                class="mt-4"
+                @click="clearFilters"
             >
-                {{ loadingMore ? "Loading…" : "Load more" }}
+                Clear filters
             </SharedButton>
-        </div>
+        </AppEmptyState>
+
+        <template v-else>
+            <ReportsTable
+                :reports="reports"
+                :can-moderate="canModerate"
+                :saving="saving"
+                :sort="params.sort"
+                :dir="params.dir"
+                class="mt-4"
+                :class="pending && 'opacity-60'"
+                :aria-busy="pending"
+                @status="updateStatus"
+                @sort="toggleSort"
+            />
+
+            <p
+                v-if="actionError"
+                role="alert"
+                class="mt-3 text-sm text-red-600 dark:text-red-400"
+            >
+                {{ actionError }}
+            </p>
+
+            <ReportsPagination
+                v-model:size="size"
+                :page="page"
+                :page-count="pageCount"
+                :total="total"
+                class="mt-4"
+                @go="goTo"
+            />
+        </template>
     </div>
 </template>

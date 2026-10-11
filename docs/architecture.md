@@ -22,20 +22,20 @@ Pattern: state lives in a composable, components draw state and emit events, eve
 app/
   pages/index.vue              map + nearby panel (slice 6) + reports layer (7c)
   pages/reports/new.vue        report form (7b): map + <ReportsForm>, state in useReportForm
-  pages/reports/index.vue      report list (7d): own for citizens, all + status select for staff; one-shot "Report sent" banner; rows in <ReportsTable>
+  pages/reports/index.vue      report list (7d): own for citizens, all + status select for staff; search, status filter, sortable columns, page numbers; all state in the URL (?q&status&page&size&sort&dir); one-shot "Report sent" banner
   pages/collection-points.vue, zones.vue   staff-only placeholders (roles via definePageMeta)
   pages/login.vue              layout: false
   layouts/default.vue          menubar + window frame (maximize = full-bleed)
   middleware/auth.global.ts    fetches session → useState("session"); redirects; checks meta.roles
   composables/useNearby.ts     nearby state + fetch (abort, request counter)
-  composables/useReportList.ts list state: first page via useFetch (SSR), Load more via $fetch keyset cursor, PATCH status (optimistic, reverts on error)
+  composables/useReportList.ts list state from route.query (parsed with defaults, invalid values ignored) → useFetch (SSR, refetch on change); writes go back to the URL (push for pages, replace for search after 300 ms); any change but page resets to page 1; PATCH status (optimistic, reverts on error)
   composables/useReportForm.ts report form state: draft save/restore on 401, geolocation race guard, error mapping, submit
   composables/useReports.ts    reports layer: watch [show, bbox] → 300 ms debounce → fetch (abort); span guard
   composables/useLeafletMap.ts shared Leaflet setup (tiles, view, zoom, unmount-safe, ResizeObserver)
   components/                  MapView.client.vue, LocationPicker.client.vue, NearbyPanel.vue,
                                ReportsLayerCard.vue (v-model:show), AppMenubar.vue,
                                AppCommandPalette.vue (Cmd/Ctrl+K), AppLoader.vue, AppEmptyState.vue
-  components/reports/          ReportsTable.vue (rows, emits status), ReportsForm.vue (v-model:description, emits locate/submit);
+  components/reports/          ReportsTable.vue (rows, sortable headers, sticky thead, emits status/sort), ReportsPagination.vue (v-model:size, emits go), ReportsForm.vue (v-model:description, emits locate/submit);
                                file names start with the folder name so Nuxt dedupes the prefix (<ReportsTable>, not <ReportsReportsTable>)
   components/shared/           UI kit, auto-imported as <SharedX>: Button (primary/secondary/ghost,
                                `to` renders NuxtLink, `loading`/`icon`), IconButton (required label),
@@ -52,7 +52,7 @@ server/
   api/reports.get.ts           bbox query (&& envelope), span-limited
   api/reports.post.ts          create, 422 outside service area
   api/reports/[id].patch.ts    status change, keeps cleared_at consistent
-  api/reports/list.get.ts      keyset paging; own vs all via report:moderate; returns canModerate
+  api/reports/list.get.ts      OFFSET page numbers + count (page clamped to the last page); q = description ILIKE (%/_ escaped) or id; sort by whitelisted ORDER BY fragments; own vs all via report:moderate; returns { reports, total, page, canModerate }
   utils/db.ts                  lazy pg Pool from runtimeConfig.databaseUrl
   utils/auth.ts                auth, requireSession, requirePermission, hasPermission
   utils/geo.ts                 isInServiceArea (ST_Covers on zones)
@@ -66,6 +66,7 @@ db/
   queries/01-04                core queries
   queries/05-07                EXPLAIN experiments (index on/off inside a rolled-back txn)
   queries/08                   report list paging on 100k rows (rolled-back txn)
+  queries/09                   report search + count + OFFSET on 100k rows, trigram index on/off (rolled-back txn)
   explain/                     saved plans
 ```
 
@@ -74,7 +75,7 @@ db/
 - `zones(boundary geography(Polygon, 4326))`
 - `collection_points(location geography(Point, 4326), type, fill_level 0–100)`
 - `dump_reports(location geography(Point, 4326), description, status, reported_by text, reported_at, cleared_at)`
-- Indexes: GiST on both `location` columns; list B-trees `(reported_at, id)`, `(status, reported_at, id)`, `(reported_by, reported_at, id)`.
+- Indexes: GiST on both `location` columns; list B-trees `(reported_at, id)`, `(status, reported_at, id)`, `(reported_by, reported_at, id)`; `pg_trgm` GIN on `description` for `ILIKE '%…%'` search.
 - Constraints: `status IN (open, assigned, cleared)`; `(status = 'cleared') = (cleared_at IS NOT NULL)`; `cleared_at >= reported_at`; description 5–1000 chars.
 - `reported_by` has **no FK**: Better Auth creates its `"user"` table from the app (`auth-bootstrap.ts`) after `db/init` has run. Migrations would fix this.
 - All columns are `geography`, so `ST_DWithin` / `ST_Distance` work in **metres**. `ST_X`/`ST_Y` need a `::geometry` cast.

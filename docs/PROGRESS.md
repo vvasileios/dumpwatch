@@ -15,6 +15,7 @@ Done and committed:
 - **Slice 7d:** `/reports` list with keyset paging, own vs all, staff status select, EXPLAIN in README.
 - **Shared UI kit:** `app/components/shared/` (Button, IconButton, Field, Input, Textarea, Select, Checkbox) replaces the copied class strings in login, report form, reports list, nearby panel, menubar, and layout. Status change in the list is now optimistic with revert. Browser-tested.
 - **Reports pages split:** `components/reports/` (ReportsTable, ReportsForm) and `useReportForm` composable; pages only wire state to components. Browser-tested.
+- **Reports list UX:** page numbers (OFFSET + count) with rows-per-page, search (description or #id, `pg_trgm` index), status filter, sortable Status/Reported/Cleared columns, all in the URL. Replaced keyset Load more. EXPLAIN in `db/queries/09_report_search.sql`. API and browser tested.
 
 ## Next
 
