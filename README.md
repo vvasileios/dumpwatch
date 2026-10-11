@@ -29,7 +29,7 @@ Opens http://localhost:3000. Sign in with `ADMIN_EMAIL` / `ADMIN_PASSWORD` from 
 | `make migrate`         | apply pending migrations (`make up` does it too)  |
 | `make migration name=x`| new migration file in `db/migrations/`            |
 | `make rollback`        | undo the latest migration                         |
-| `make seed`            | load sample zones, points, reports (empty DB)     |
+| `make seed`            | load sample zones, points, reports (or use the wand) |
 | `make reset`           | delete DB + node_modules volumes (all data lost)  |
 
 ## Layout
@@ -40,7 +40,7 @@ Opens http://localhost:3000. Sign in with `ADMIN_EMAIL` / `ADMIN_PASSWORD` from 
 - `server/utils/` — `db()` pg pool, `auth` + `requirePermission(event, { report: ["delete"] })`
 - `server/plugins/auth-bootstrap.ts` — checks the Better Auth schema and seeds the admin on startup
 - `shared/utils/permissions.ts` — roles and permissions (used by client and server)
-- `db/migrations/` — schema changes (dbmate); `db/schema.sql` — generated current schema; `db/seed.sql` — sample data (`make seed`)
+- `db/migrations/` — schema changes (dbmate); `db/schema.sql` — generated current schema; `db/seed/` — sample data, loaded from the wand in the top bar (admins, dev) or `make seed`
 
 ## Database
 

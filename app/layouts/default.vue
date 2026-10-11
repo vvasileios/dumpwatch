@@ -1,6 +1,7 @@
 <script setup lang="ts">
 const route = useRoute();
 const maximized = useState("window-maximized", () => false);
+const canSeed = useCanSeed();
 
 const current = computed(() => navItems.find((i) => i.to === route.path));
 const title = computed(
@@ -62,5 +63,6 @@ useHead({ title: () => `${title.value} · dumpwatch` });
         </div>
 
         <AppCommandPalette />
+        <SeedDialog v-if="canSeed" />
     </div>
 </template>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 withDefaults(
     defineProps<{
-        variant?: "primary" | "secondary" | "ghost";
+        variant?: "primary" | "secondary" | "ghost" | "danger";
         size?: "md" | "lg";
         to?: string;
         type?: "button" | "submit";
@@ -20,6 +20,7 @@ const variants = {
         "border-b-[3px] border-emerald-800 bg-emerald-600 font-semibold text-white hover:bg-emerald-500 focus-visible:ring-emerald-600/30 active:translate-y-px active:border-b",
     secondary:
         "font-medium text-zinc-700 ring-1 ring-zinc-900/10 hover:bg-zinc-900/5 focus-visible:ring-emerald-600/25 dark:text-zinc-200 dark:ring-white/10 dark:hover:bg-white/10",
+    danger: "bg-red-600 font-semibold text-white hover:bg-red-500 focus-visible:ring-red-600/30",
     ghost: "font-medium text-zinc-600 hover:bg-zinc-900/5 hover:text-zinc-900 focus-visible:ring-emerald-600/25 dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-white",
 };
 const sizes = { md: "h-9 px-3", lg: "h-10 px-4" };

@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 
 export default defineNuxtConfig({
@@ -15,5 +16,16 @@ export default defineNuxtConfig({
     },
     runtimeConfig: {
         databaseUrl: "",
+        public: {
+            demoTools: process.env.NODE_ENV !== "production",
+        },
+    },
+    nitro: {
+        serverAssets: [
+            {
+                baseName: "seed",
+                dir: fileURLToPath(new URL("./db/seed", import.meta.url)),
+            },
+        ],
     },
 });

@@ -21,11 +21,11 @@ Done and committed:
 - **Slice 9:** nearest collection point per report in the `/reports` table (type, distance, fill level): `LEFT JOIN LATERAL ... ORDER BY location <-> ... LIMIT 1` after paging; status updates merge the PATCH response so the column survives. EXPLAIN in `db/queries/10_report_list_nearest.sql` (4.5 ms after paging vs 2.9 s per-report vs 271 ms without GiST). API and browser tested.
 - **Slice 10:** `/collection-points` hotspots (staff): `GET /api/points/hotspots?radius=` (ST_DWithin from unresolved reports, EXPLAIN in `db/queries/11_hotspots.sql`), `SharedTable` extracted (reports + hotspots), `PointsBadge`, map opens at `?lat&lng`, nearest point in map report popups (shared `NEAREST_POINT_JOIN`, ~20 ms for 500 reports). API and browser tested.
 - **Migrations (dbmate 2.36):** `db/migrations/` owns the whole schema (extensions, Better Auth tables, app tables, new `reported_by` FK with ON DELETE SET NULL); one-shot `migrate` service before the app; `make migrate / migration / rollback / migrate-status / seed`; `db/init` removed, seed moved to `db/seed.sql` (guarded); Better Auth runtime auto-migration replaced by a startup drift check that prints the SQL. Existing DB baselined (no reset); fresh DB and full rollback verified on a scratch database.
+- **Seed manager:** first run is empty (admin only). Admin-only wand in the top bar opens a modal to seed/remove zones, collection points, reports and demo users (citizen + moderator, password shown); `is_sample` column (migration); remove deletes only sample rows; dependencies enforced in SQL guards + an advisory lock; `demo: ["manage"]` permission; `runtimeConfig.public.demoTools` (on in dev, off in production unless `NUXT_PUBLIC_DEMO_TOOLS=true`). Baseline migrations renamed to 20261011… (they were dated in the future). API and browser tested.
 
 ## Next
 
-1. **Seed manager:** wand icon (admin, dev-only switch) + modal to seed/remove zones, collection points, reports, demo users; `is_sample` column via a migration; dependencies (points/reports need zones); remove deletes sample rows, warns with counts.
-2. **Before real data:**
+1. **Before real data:**
    - A few API tests.
    - Production Dockerfile (`nuxt build`), Caddy for HTTPS.
    - Least-privilege DB role.

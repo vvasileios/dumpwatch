@@ -1,6 +1,8 @@
 <script setup lang="ts">
 const session = useState<Session | null>("session");
 const palette = useState("palette-open", () => false);
+const seedOpen = useState("seed-open", () => false);
+const canSeed = useCanSeed();
 const mobileNav = ref<HTMLElement>();
 
 const items = computed(() => visibleNav(session.value?.user.role));
@@ -60,6 +62,13 @@ const panel =
                     <span class="hidden sm:inline">Report dump</span>
                     <span class="sr-only sm:hidden">Report dump</span>
                 </SharedButton>
+
+                <SharedIconButton
+                    v-if="canSeed"
+                    icon="lucide:wand-sparkles"
+                    label="Sample data"
+                    @click="seedOpen = true"
+                />
 
                 <button
                     type="button"

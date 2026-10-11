@@ -141,6 +141,7 @@ CREATE TABLE public.collection_points (
     location public.geography(Point,4326) NOT NULL,
     fill_level smallint,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    is_sample boolean DEFAULT false NOT NULL,
     CONSTRAINT collection_points_fill_level_check CHECK (((fill_level >= 0) AND (fill_level <= 100))),
     CONSTRAINT collection_points_type_check CHECK ((type = ANY (ARRAY['mixed'::text, 'recycling'::text, 'glass'::text, 'organic'::text])))
 );
@@ -172,6 +173,7 @@ CREATE TABLE public.dump_reports (
     reported_by text,
     reported_at timestamp with time zone DEFAULT now() NOT NULL,
     cleared_at timestamp with time zone,
+    is_sample boolean DEFAULT false NOT NULL,
     CONSTRAINT dump_reports_cleared_after_reported CHECK ((cleared_at >= reported_at)),
     CONSTRAINT dump_reports_cleared_at_matches_status CHECK (((status = 'cleared'::text) = (cleared_at IS NOT NULL))),
     CONSTRAINT dump_reports_description_length CHECK (((description IS NULL) OR ((char_length(description) >= 5) AND (char_length(description) <= 1000)))),
@@ -319,7 +321,8 @@ CREATE TABLE public.verification (
 CREATE TABLE public.zones (
     id bigint NOT NULL,
     name text NOT NULL,
-    boundary public.geography(Polygon,4326) NOT NULL
+    boundary public.geography(Polygon,4326) NOT NULL,
+    is_sample boolean DEFAULT false NOT NULL
 );
 
 
@@ -638,7 +641,8 @@ ALTER TABLE ONLY public."twoFactor"
 --
 
 INSERT INTO public.schema_migrations (version) VALUES
-    ('20261012000000'),
-    ('20261012000100'),
-    ('20261012000200'),
-    ('20261012000300');
+    ('20261011000000'),
+    ('20261011000100'),
+    ('20261011000200'),
+    ('20261011000300'),
+    ('20261011172113');

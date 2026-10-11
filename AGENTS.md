@@ -33,7 +33,7 @@ make typecheck                # nuxt typecheck (vue-tsc); run before every commi
 make migrate                  # apply pending migrations (also runs automatically on make up)
 make migration name=add_x     # new db/migrations/<timestamp>_add_x.sql (-- migrate:up / -- migrate:down)
 make rollback                 # run the latest migration's down
-make seed                     # load sample data into an empty DB (refuses if zones has rows)
+make seed                     # load all sample data from db/seed/*.sql (same SQL as the wand; refuses if already loaded)
 make reset                    # DESTRUCTIVE: deletes DB and node_modules volumes
 ```
 
@@ -53,7 +53,7 @@ make reset                    # DESTRUCTIVE: deletes DB and node_modules volumes
 | Server helpers | `server/utils/` (`db()`, auth guards, `isInServiceArea`) |
 | Types and limits used on both sides | `shared/types/`, `shared/utils/` |
 | Schema | `db/migrations/` (dbmate, applied in order); `db/schema.sql` is the generated current schema, never edit it |
-| Sample data | `db/seed.sql` (`make seed`) |
+| Sample data | `db/seed/*.sql` (rows get `is_sample = true`), loaded by the admin wand modal (`/api/admin/seed`) or `make seed` |
 | Hand-written and EXPLAIN queries | `db/queries/NN_name.sql`, saved plans in `db/explain/` |
 
 `server/utils` is auto-imported only in Nitro, but its types leak into the app typecheck: client code that uses it passes `make typecheck` and crashes at runtime. Put client helpers in `app/utils`, shared ones in `shared/utils`.

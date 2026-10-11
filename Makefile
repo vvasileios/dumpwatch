@@ -23,7 +23,7 @@ migrate-status:
 	docker compose run --rm migrate status
 
 seed:
-	docker compose exec -T db sh -c 'psql -U $$POSTGRES_USER -d $$POSTGRES_DB -v ON_ERROR_STOP=1 --single-transaction' < db/seed.sql
+	cat db/seed/zones.sql db/seed/points.sql db/seed/reports.sql | docker compose exec -T db sh -c 'psql -U $$POSTGRES_USER -d $$POSTGRES_DB -v ON_ERROR_STOP=1 --single-transaction'
 
 up:
 	docker compose up -d --build
