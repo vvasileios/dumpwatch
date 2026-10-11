@@ -25,6 +25,7 @@ Opens http://localhost:3000. Sign in with `ADMIN_EMAIL` / `ADMIN_PASSWORD` from 
 | `make psql`            | psql into the database                            |
 | `make install pkg=foo` | add an npm package (use this, not host `npm i`)   |
 | `make typecheck`       | type-check app and server (vue-tsc)               |
+| `make test`            | API tests against a fresh test DB + production build |
 | `make skills`          | link `.agents/skills` into `.claude/skills`       |
 | `make migrate`         | apply pending migrations (`make up` does it too)  |
 | `make migration name=x`| new migration file in `db/migrations/`            |

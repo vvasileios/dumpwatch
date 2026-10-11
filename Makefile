@@ -4,7 +4,7 @@ export HOST_GID := $(shell id -g)
 APP_URL := http://localhost:3000
 OPEN := $(shell command -v wslview || command -v xdg-open || command -v open || command -v explorer.exe)
 
-.PHONY: up down build logs sh psql install reset sql typecheck skills migrate migration rollback migrate-status seed
+.PHONY: up down build logs sh psql install reset sql typecheck skills migrate migration rollback migrate-status seed test
 sql:
 	$(if $(f),,$(error usage: make sql f=db/queries/01_nearby.sql))
 	docker compose exec -T db sh -c 'psql -U $$POSTGRES_USER -d $$POSTGRES_DB -v ON_ERROR_STOP=1' < $(f)
@@ -55,6 +55,10 @@ install:
 
 reset:
 	docker compose down -v
+
+test:
+	docker compose --profile test run --rm --build test; status=$$?; \
+	docker compose --profile test rm -fs migrate-test >/dev/null 2>&1; exit $$status
 
 typecheck:
 	docker compose exec app npx nuxt typecheck

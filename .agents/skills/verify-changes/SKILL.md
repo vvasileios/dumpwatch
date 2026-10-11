@@ -16,7 +16,7 @@ Reading code is not a review. Run it.
 
 | Changed | Run |
 | --- | --- |
-| Any `.ts` / `.vue` | `make typecheck` |
+| Any `.ts` / `.vue` | `make typecheck`, `make test` |
 | `server/api/**` | API checks (step 2) |
 | SQL / `db/queries` | `make sql f=...`, results in `make psql` |
 | `app/pages`, components, composables | browser checks (step 3) |

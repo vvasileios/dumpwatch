@@ -30,6 +30,7 @@ make down | logs | sh | psql
 make install pkg="foo"        # the only way to add a package
 make sql f=db/queries/01_nearby.sql   # run a SQL file (ON_ERROR_STOP)
 make typecheck                # nuxt typecheck (vue-tsc); run before every commit
+make test                     # API tests: fresh dumpwatch_test DB, production build on :3001, node:test (~15 s)
 make migrate                  # apply pending migrations (also runs automatically on make up)
 make migration name=add_x     # new db/migrations/<timestamp>_add_x.sql (-- migrate:up / -- migrate:down)
 make rollback                 # run the latest migration's down
@@ -38,7 +39,8 @@ make reset                    # DESTRUCTIVE: deletes DB and node_modules volumes
 ```
 
 - App `127.0.0.1:3000`, Postgres `127.0.0.1:5432` (`dumpwatch`/`dumpwatch`), Node inspector `127.0.0.1:9229`.
-- There is no lint, test, or CI setup. `make typecheck` plus running the code is the verification.
+- No lint or CI yet. `make typecheck` + `make test` + running the code is the verification.
+- Tests: `tests/NN_area.test.ts` (node:test, Node strips types: no enums or parameter properties). Users come from `userWithRole(role)` (admin create-user + impersonate, not sign-in: production rate-limits sign-in to 3 per 10 s). Files run in order on one DB; `01_seed` seeds it.
 - Never run `make reset`, `docker compose down -v`, or destructive SQL without the user's explicit go-ahead.
 
 ## Where code goes
@@ -101,7 +103,7 @@ make reset                    # DESTRUCTIVE: deletes DB and node_modules volumes
 
 ## Before you finish
 
-- Code change: `make typecheck`, then run what you changed (curl / psql / browser). Report what you ran and what you couldn't.
+- Code change: `make typecheck` and `make test`, then run what you changed (curl / psql / browser). New or changed endpoint: add its cases to `tests/`. Report what you ran and what you couldn't.
 - New migration: run `make migrate` and the rollback round-trip; commit `db/schema.sql` with it.
 - Added a route, composable, component, endpoint, or table: update [docs/architecture.md](docs/architecture.md).
 - Remove test users and reports you created.

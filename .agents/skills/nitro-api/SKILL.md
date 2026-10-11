@@ -53,4 +53,4 @@ const body = parseInput(BODY, await readBody(event));
 
 Run the `verify-changes` skill's API checklist: 401 without a cookie, 403 with the wrong role, 400 with each bad field, 404 / 422 where they apply, then the happy path. Check the row in `make psql`.
 
-Result: one handler file, optional shared type/limit, a passing `make typecheck`, and a pass/fail table of curl checks.
+Result: one handler file, optional shared type/limit, its cases in `tests/NN_area.test.ts` (401/403, each 400 field, 404, happy path), and a passing `make typecheck` + `make test`.

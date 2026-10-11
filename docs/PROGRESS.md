@@ -22,11 +22,11 @@ Done and committed:
 - **Slice 10:** `/collection-points` hotspots (staff): `GET /api/points/hotspots?radius=` (ST_DWithin from unresolved reports, EXPLAIN in `db/queries/11_hotspots.sql`), `SharedTable` extracted (reports + hotspots), `PointsBadge`, map opens at `?lat&lng`, nearest point in map report popups (shared `NEAREST_POINT_JOIN`, ~20 ms for 500 reports). API and browser tested.
 - **Migrations (dbmate 2.36):** `db/migrations/` owns the whole schema (extensions, Better Auth tables, app tables, new `reported_by` FK with ON DELETE SET NULL); one-shot `migrate` service before the app; `make migrate / migration / rollback / migrate-status / seed`; `db/init` removed, seed moved to `db/seed.sql` (guarded); Better Auth runtime auto-migration replaced by a startup drift check that prints the SQL. Existing DB baselined (no reset); fresh DB and full rollback verified on a scratch database.
 - **Seed manager:** first run is empty (admin only). Admin-only wand in the top bar opens a modal to seed/remove zones, collection points, reports and demo users (citizen + moderator, password shown); `is_sample` column (migration); remove deletes only sample rows; dependencies enforced in SQL guards + an advisory lock; `demo: ["manage"]` permission; `runtimeConfig.public.demoTools` (on in dev, off in production unless `NUXT_PUBLIC_DEMO_TOOLS=true`). Baseline migrations renamed to 20261011… (they were dated in the future). API and browser tested.
+- **API tests:** `make test` (32 tests, ~15 s): drops/migrates `dumpwatch_test`, builds the app (`nuxt build`, .nuxt on tmpfs so dev is untouched), runs it on :3001 with `NODE_ENV=production`, runs `tests/*.test.ts` with node:test, type-checked by `tests/tsconfig.json`. Covers auth on every endpoint, 400 fieldErrors, reports/list/map/nearby/hotspots/stats/seed manager, brute-force cross-checks in SQL, rate limiting. Verified it catches a broken search escape.
 
 ## Next
 
 1. **Before real data:**
-   - A few API tests.
    - Production Dockerfile (`nuxt build`), Caddy for HTTPS.
    - Least-privilege DB role.
    - Mailpit for auth emails.
@@ -34,6 +34,7 @@ Done and committed:
 
 ## Known debt and open decisions
 
-- No test suite, linter, formatter config, or CI yet. `make typecheck` is the only automated check.
+- No linter, formatter config, or CI yet. `make typecheck` + `make test` are the automated checks; there are no browser (UI) tests.
+- Production must set `NODE_ENV=production`: Better Auth only rate-limits (sign-in/up: 3 per 10 s) when it is. Behind Caddy, set `advanced.ipAddress.ipAddressHeaders` / `trustedProxies`, otherwise all clients share one rate-limit bucket.
 - Seed dates shift with `now()` on every reset; ids and locations stay the same.
 - Zones share edges: a report exactly on a border counts in both zone cards (`ST_Covers`), so zone cards can add up to more than the city card (which counts each report once).
