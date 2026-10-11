@@ -26,12 +26,12 @@ const QUERY = `
 export default defineEventHandler(async (event): Promise<DumpReport[]> => {
     await requireSession(event);
 
-    const { bbox, status } = await getValidatedQuery(
-        event,
+    const { bbox, status } = parseInput(
         z.object({
             bbox: BboxSchema,
             status: z.enum(REPORT_STATUSES).optional(),
-        }).parse,
+        }),
+        getQuery(event),
     );
 
     const [minLng, minLat, maxLng, maxLat] = bbox;

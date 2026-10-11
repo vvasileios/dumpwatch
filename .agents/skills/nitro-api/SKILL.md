@@ -17,19 +17,21 @@ Hard rules (auth, validation, error codes, coordinate order) are in `AGENTS.md` 
 ## 2. Validate input
 
 ```ts
-const { id } = await getValidatedRouterParams(
-    event,
-    z.object({ id: z.string().regex(/^\d{1,18}$/) }).parse,
+const { id } = parseInput(
+    z.object({ id: z.string().regex(/^\d{1,18}$/) }),
+    getRouterParams(event),
 );
-const { status } = await getValidatedQuery(
-    event,
-    z.object({ status: z.enum(REPORT_STATUSES).optional() }).parse,
+const { status } = parseInput(
+    z.object({ status: z.enum(REPORT_STATUSES).optional() }),
+    getQuery(event),
 );
+const body = parseInput(BODY, await readBody(event));
 ```
+
+`parseInput` (`server/utils/validate.ts`) throws 400 with `data: z.flattenError(err).fieldErrors`. Don't use h3's `getValidatedQuery` / `readValidatedBody`: they wrap validator errors in their own shape.
 
 - Numbers in the query string: copy `numberParam` from `server/api/points/nearby.get.ts` (string, regex, transform, pipe).
 - Coordinates: `lat` in [-90, 90], `lng` in [-180, 180]; bboxes need min < max and a span limit (`server/api/reports.get.ts`).
-- Body where the client needs field errors: `safeParse(await readBody(event))`, then throw 400 with `data: z.flattenError(result.error).fieldErrors` (`server/api/reports.post.ts`).
 - Limits that the UI also shows go in `shared/utils/*.ts`, not inline.
 
 ## 3. Query

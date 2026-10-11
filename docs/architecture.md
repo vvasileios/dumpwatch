@@ -23,12 +23,14 @@ app/
   pages/index.vue              map + nearby panel (slice 6) + reports layer (7c)
   pages/reports/new.vue        report form (7b): map + <ReportsForm>, state in useReportForm
   pages/reports/index.vue      report list (7d): own for citizens, all + status select for staff; search, status filter, sortable columns, page numbers; all state in the URL (?q&status&page&size&sort&dir); one-shot "Report sent" banner
-  pages/collection-points.vue, zones.vue   staff-only placeholders (roles via definePageMeta)
+  pages/zones.vue              zone dashboard (8), staff only: city + per-zone cards, 12-week trend; selected zone in ?zone=
+  pages/collection-points.vue  staff-only placeholder (roles via definePageMeta)
   pages/login.vue              layout: false
   layouts/default.vue          menubar + window frame (maximize = full-bleed)
   middleware/auth.global.ts    fetches session → useState("session"); redirects; checks meta.roles
   composables/useNearby.ts     nearby state + fetch (abort, request counter)
   composables/useReportList.ts list state from route.query (parsed with defaults, invalid values ignored) → useFetch (SSR, refetch on change); writes go back to the URL (push for pages, replace for search after 300 ms); any change but page resets to page 1; PATCH status (optimistic, reverts on error)
+  composables/useZoneDashboard.ts  two useFetch (SSR) in parallel: stats + weekly (query follows ?zone=, read with a regex); select() pushes the URL
   composables/useReportForm.ts report form state: draft save/restore on 401, geolocation race guard, error mapping, submit
   composables/useReports.ts    reports layer: watch [show, bbox] → 300 ms debounce → fetch (abort); span guard
   composables/useLeafletMap.ts shared Leaflet setup (tiles, view, zoom, unmount-safe, ResizeObserver)
@@ -37,13 +39,15 @@ app/
                                AppCommandPalette.vue (Cmd/Ctrl+K), AppLoader.vue, AppEmptyState.vue
   components/reports/          ReportsTable.vue (rows, sortable headers, sticky thead, emits status/sort), ReportsPagination.vue (v-model:size, emits go), ReportsForm.vue (v-model:description, emits locate/submit);
                                file names start with the folder name so Nuxt dedupes the prefix (<ReportsTable>, not <ReportsReportsTable>)
+  components/zones/            ZonesCard.vue (toggle button, aria-pressed, status counts + avg time to clear), ZonesTrend.vue (HTML/CSS bar chart:
+                               bars with sr-only text + hover/focus tooltip, current week faded "so far", labels via NuxtTime in CITY_TIMEZONE)
   components/shared/           UI kit, auto-imported as <SharedX>: Button (primary/secondary/ghost,
                                `to` renders NuxtLink, `loading`/`icon`), IconButton (required label),
                                Field (label), Input (trailing slot), Textarea, Select (typed options),
                                Checkbox; all form controls use v-model (defineModel)
   utils/                       nav.ts (one nav list, role-filtered), auth-client.ts, point-types.ts,
                                report-status.ts (reportStatusColors), field.ts (fieldClass: shared
-                               border/focus/invalid styles for inputs, textareas, selects)
+                               border/focus/invalid styles for inputs, textareas, selects), format.ts (formatHours)
   types/page-meta.d.ts         PageMeta.roles / title
 server/
   api/auth/[...all].ts         Better Auth handler
@@ -53,12 +57,17 @@ server/
   api/reports.post.ts          create, 422 outside service area
   api/reports/[id].patch.ts    status change, keeps cleared_at consistent
   api/reports/list.get.ts      OFFSET page numbers + count (page clamped to the last page); q = description ILIKE (%/_ escaped) or id; sort by whitelisted ORDER BY fragments; own vs all via report:moderate; returns { reports, total, page, canModerate }
+  api/stats/zones.get.ts       report:moderate; query 3: per-zone rows UNION ALL a city row straight from dump_reports (border reports count once) → { city, zones }; counts ::int, avg time as hours ::float8
+  api/stats/weekly.get.ts      report:moderate; ?zone (404 if missing, from the same query); query 4: reports bucketed once with date_trunc('week', ts, Europe/Athens) (DST-safe), LEFT JOINed onto generate_series weeks; zone variant scans the GiST index once
   utils/db.ts                  lazy pg Pool from runtimeConfig.databaseUrl
   utils/auth.ts                auth, requireSession, requirePermission, hasPermission
+  utils/validate.ts            parseInput(schema, input): Zod safeParse → 400 with fieldErrors (every handler)
   utils/geo.ts                 isInServiceArea (ST_Covers on zones)
   plugins/auth-bootstrap.ts    Better Auth migrations + admin seed on every start
 shared/
   types/collection-point.ts, report.ts (DumpReport, ReportStatus, Bbox tuple)
+  types/stats.ts               ZoneCounts, ZoneStats, ZoneDashboard, WeeklyCount
+  utils/stats.ts               CITY_TIMEZONE, TREND_WEEKS
   utils/permissions.ts         ac + roles: user / moderator / admin
   utils/nearby.ts, reports.ts  limits shared by client and server
 db/

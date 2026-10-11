@@ -27,7 +27,7 @@ LIMIT $4`;
 
 export default defineEventHandler(async (event): Promise<NearbyResponse> => {
     await requireSession(event);
-    const { lat, lng, radius } = await getValidatedQuery(event, Query.parse);
+    const { lat, lng, radius } = parseInput(Query, getQuery(event));
 
     const inServiceArea = await isInServiceArea(lng, lat);
     if (!inServiceArea) return { inServiceArea: false, points: [] };

@@ -12,15 +12,7 @@ const BODY = z.object({
 
 export default defineEventHandler(async (event): Promise<DumpReport> => {
     const session = await requirePermission(event, { report: ["create"] });
-    const result = BODY.safeParse(await readBody(event));
-    if (!result.success) {
-        throw createError({
-            statusCode: 400,
-            statusMessage: "Invalid report",
-            data: z.flattenError(result.error).fieldErrors,
-        });
-    }
-    const { lat, lng, description } = result.data;
+    const { lat, lng, description } = parseInput(BODY, await readBody(event));
 
     const inServiceArea = await isInServiceArea(lng, lat);
     if (!inServiceArea) {

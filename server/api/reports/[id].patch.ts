@@ -10,16 +10,16 @@ const QUERY = `
 
 export default defineEventHandler(async (event): Promise<DumpReport> => {
     await requirePermission(event, { report: ["update"] });
-    const { id } = await getValidatedRouterParams(
-        event,
-        z.object({ id: z.string().regex(/^\d{1,18}$/) }).parse,
+    const { id } = parseInput(
+        z.object({ id: z.string().regex(/^\d{1,18}$/) }),
+        getRouterParams(event),
     );
 
-    const { status } = await readValidatedBody(
-        event,
+    const { status } = parseInput(
         z.object({
             status: z.enum(REPORT_STATUSES),
-        }).parse,
+        }),
+        await readBody(event),
     );
 
     const { rows } = await db().query<DumpReport>(QUERY, [id, status]);

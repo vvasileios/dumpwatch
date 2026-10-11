@@ -42,8 +42,7 @@ export default defineEventHandler(async (event): Promise<DumpReportList> => {
     const session = await requireSession(event);
     const canModerate = await hasPermission(session, { report: ["moderate"] });
 
-    const query = await getValidatedQuery(
-        event,
+    const query = parseInput(
         z.object({
             status: z.enum(REPORT_STATUSES).optional(),
             q: z.string().trim().max(REPORT_SEARCH_MAX).optional(),
@@ -51,7 +50,8 @@ export default defineEventHandler(async (event): Promise<DumpReportList> => {
             size: sizeParam.optional(),
             sort: z.enum(REPORT_SORTS).optional(),
             dir: z.enum(["asc", "desc"]).optional(),
-        }).parse,
+        }),
+        getQuery(event),
     );
 
     const size = query.size ?? REPORTS_PAGE_SIZE;

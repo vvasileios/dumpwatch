@@ -65,7 +65,7 @@ make reset                    # DESTRUCTIVE: deletes DB and node_modules volumes
 
 - Every handler starts with `requireSession(event)` or `requirePermission(event, { report: ["…"] })`. `auth.global.ts` protects pages only.
 - Better Auth `auth.api.userHasPermission` returns `{ success }`, not a boolean; use `hasPermission`.
-- Validate all input with Zod: `getValidatedQuery` / `getValidatedRouterParams` / `readValidatedBody`. For custom 400 `data`, use `schema.safeParse(await readBody(event))` and throw yourself (`readValidatedBody` wraps validator errors).
+- Validate all input with Zod via `parseInput(schema, getQuery(event) | getRouterParams(event) | await readBody(event))`; it throws the 400 below. Not h3's `getValidated*` / `readValidated*` (they wrap errors in another shape).
 - Query params are strings: `z.string().regex(...).transform(Number).pipe(z.number()...)`. Don't use `z.coerce` (its `unknown` input breaks `.pipe` typing).
 - Ids from URLs: `/^\d{1,18}$/` (longer values overflow `bigint` and surface as 500).
 - Error contract: 400 `data` = `z.flattenError(err).fieldErrors`; 401 no session; 403 role; 404 missing; 422 outside the service area. The client reads `FetchError.data.data`.

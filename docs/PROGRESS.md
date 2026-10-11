@@ -16,15 +16,13 @@ Done and committed:
 - **Shared UI kit:** `app/components/shared/` (Button, IconButton, Field, Input, Textarea, Select, Checkbox) replaces the copied class strings in login, report form, reports list, nearby panel, menubar, and layout. Status change in the list is now optimistic with revert. Browser-tested.
 - **Reports pages split:** `components/reports/` (ReportsTable, ReportsForm) and `useReportForm` composable; pages only wire state to components. Browser-tested.
 - **Reports list UX:** page numbers (OFFSET + count) with rows-per-page, search (description or #id, `pg_trgm` index), status filter, sortable Status/Reported/Cleared columns, all in the URL. Replaced keyset Load more. EXPLAIN in `db/queries/09_report_search.sql`. API and browser tested.
+- **Slice 8:** zone dashboard on `/zones`: `GET /api/stats/zones` (GROUPING SETS city row, avg hours to clear) and `GET /api/stats/weekly?zone=` (12 weeks, `generate_series` in Europe/Athens, empty weeks filled), `useZoneDashboard`, `ZonesCard`, `ZonesTrend` (plain HTML bar chart). API and browser tested, light/dark/phone.
+- **Slice 8 review fixes:** weekly trend bucketed with `date_trunc(..., tz)` (DST weeks lost/double-counted an hour), zone trend in one query with one GiST scan, city row counts border reports once, Retry buttons for stats/trend errors, `?zone=02` normalised, and `parseInput` gives every handler the `fieldErrors` 400 shape.
 
 ## Next
 
-1. **Slice 8:** zone dashboard on `/zones` (SSR `useFetch`).
-   - Second table on the site: extract `SharedTable` from `components/reports/ReportsTable.vue` then.
-   - `GET /api/stats/zones` from `db/queries/03_zone_dashboard.sql`; return the average time to clear as epoch seconds or use `justify_interval` (a raw `interval` is awkward to serialise).
-   - `GET /api/stats/weekly` from `db/queries/04_weekly_trend.sql`; fill empty weeks with `generate_series`.
-2. **Slice 9:** nearest collection point per report (`db/queries/02_nearest_per_report.sql`, KNN `<->`).
-3. **Before real data:**
+1. **Slice 9:** nearest collection point per report (`db/queries/02_nearest_per_report.sql`, KNN `<->`).
+2. **Before real data:**
    - Migrations (dbmate); this also enables the `reported_by` foreign key.
    - A few API tests.
    - Production Dockerfile (`nuxt build`), Caddy for HTTPS.
@@ -38,3 +36,5 @@ Done and committed:
 - No test suite, linter, formatter config, or CI yet. `make typecheck` is the only automated check.
 - Schema changes go through `db/init` and need `make reset`, which wipes the database.
 - Seed dates shift with `now()` on every reset; ids and locations stay the same.
+- Zones share edges: a report exactly on a border counts in both zone cards (`ST_Covers`), so zone cards can add up to more than the city card (which counts each report once).
+- Only one table so far (`ReportsTable`); extract a `SharedTable` when a second one appears.
