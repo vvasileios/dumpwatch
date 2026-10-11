@@ -108,7 +108,7 @@ db/
 
 - Zones are **land-only** polygons cut from OpenStreetMap coastline (ODbL, credited in README). The sea is outside the service area.
 - Points and reports are generated on land with `ST_GeneratePoints(union_of_zones, n, seed)` (seeds 42 / 7) plus `setseed(0.42)`: identical data after each `make reset` + `make seed`, but dates shift with `now()`. Loaded per entity from the wand modal or all at once with `make seed`; each file refuses to run twice.
-- Benchmark spot: lng 22.95, lat 40.64 (Kentro). README has the EXPLAIN results.
+- Benchmark spot: lng 22.95, lat 40.64 (Kentro). `docs/performance.md` has the EXPLAIN results.
 
 ## Auth and roles
 

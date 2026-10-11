@@ -17,7 +17,7 @@ Nuxt 4 (Nitro 2, h3 1) · Vue 3 · TypeScript `^6` (pinned: TS 7 breaks `vue-tsc
 - The user is learning. Default per slice: **write a step-by-step guide, the user builds, the agent reviews by running the code**. Implement only when told "build it" or "fix all", then explain the flow file by file.
 - Reviews: run every endpoint and edge case, report a pass/fail table, explain *why* each bug happens, clean up test data afterwards. See the `verify-changes` skill.
 - Ask before fixing review findings unless told "fix all".
-- Keep README edits minimal. **No code comments** (removed on purpose).
+- README is the project tour (screenshots, design decisions); EXPLAIN results go in `docs/performance.md`. **No code comments** (removed on purpose).
 
 ## Commands
 

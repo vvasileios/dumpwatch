@@ -23,7 +23,7 @@ description: Write, review, or benchmark PostGIS/PostgreSQL queries in dumpwatch
 | Point in zone | `ST_Covers(boundary, location)` (includes the edge) | GiST on `location`; `zones` is small and has none |
 | Exact distance for display | `ST_Distance(a, b)` in SELECT only | none |
 
-Never filter with `ST_Distance(...) < x`: it can't use the index (README benchmark: 36 ms seq scan vs 2.1 ms).
+Never filter with `ST_Distance(...) < x`: it can't use the index (docs/performance.md: 36 ms seq scan vs 2.1 ms).
 
 ## 3. Write it
 
@@ -51,7 +51,7 @@ Follow `db/queries/05_explain_nearby.sql`:
 2. Warm it once with output to `\o /dev/null`.
 3. `EXPLAIN (ANALYZE, BUFFERS) EXECUTE ...`.
 4. Compare variants (index dropped, more rows) **inside `BEGIN; ... ROLLBACK;`** so nothing persists.
-5. Save the plan to `db/explain/qN_name.txt`; add one row to the README benchmark table only if the user wants it.
+5. Save the plan to `db/explain/qN_name.txt`; add a section or row to `docs/performance.md`.
 
 ## 6. Schema or index changes
 

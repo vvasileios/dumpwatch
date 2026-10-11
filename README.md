@@ -1,133 +1,87 @@
 # dumpwatch
 
-Nuxt 4 + Nitro + PostgreSQL/PostGIS (raw SQL via `pg`) + Leaflet + Tailwind + Better Auth. Runs in Docker Compose.
+[![CI](https://github.com/vvasileios/dumpwatch/actions/workflows/ci.yml/badge.svg)](https://github.com/vvasileios/dumpwatch/actions/workflows/ci.yml)
 
-## Setup
+Citizens report illegal dumping on a map. City staff see the nearest collection points, triage reports, and follow each zone on a dashboard.
 
-Needs Docker (Desktop on Mac/Windows) and `make`. Node on the host is optional.
-On Windows, keep the repo inside WSL2 (not under `C:\`), or hot reload won't see file changes.
+Nuxt 4 · Vue 3 · TypeScript · PostgreSQL 18 + PostGIS 3.6 with **raw SQL** (`pg`, no ORM) · Better Auth · Leaflet · Tailwind 4 · dbmate · Docker Compose.
+
+| Map | Reports |
+| --- | --- |
+| ![Map with nearby collection points and the reports layer](docs/screenshots/map.jpg) | ![Reports table with search, sorting, paging and nearest point](docs/screenshots/reports.png) |
+| **Zone dashboard** | **Hotspots** |
+| ![Zone cards and weekly trend](docs/screenshots/zones.png) | ![Collection points with dumps nearby](docs/screenshots/hotspots.png) |
+
+## Run it in one minute
+
+Needs Docker and `make`.
 
 ```sh
-cp .env.example .env
-# set BETTER_AUTH_SECRET in .env:  openssl rand -base64 32
-make up
+cp .env.example .env        # then set BETTER_AUTH_SECRET: openssl rand -base64 32
+make up                     # db → migrations → app, opens http://localhost:3000
 ```
 
-Opens http://localhost:3000. Sign in with `ADMIN_EMAIL` / `ADMIN_PASSWORD` from `.env` (the admin is created on startup).
+Sign in with `ADMIN_EMAIL` / `ADMIN_PASSWORD` from `.env`. The app starts empty: click the **wand** in the top bar to load sample data (3 zones, 50,000 collection points, 500 reports, a demo citizen and moderator).
+
+<img src="docs/screenshots/sample-data.png" alt="Sample data modal" width="640">
+
+## What it does
+
+- **Citizens** pin a dump on the map (only inside the city's zones), describe it, and follow their own reports.
+- **Map**: click anywhere for the 20 nearest collection points within a radius, with fill levels; toggle a layer of reports in view.
+- **Reports** (`/reports`): search by text or `#id`, filter, sort, page; staff change the status inline; each row shows its nearest collection point.
+- **Zones** (`/zones`, staff): open / assigned / cleared and average time to clear per zone, plus a 12-week trend.
+- **Hotspots** (`/collection-points`, staff): collection points with unresolved dumps within 25 / 50 / 100 m, fullest first, each linking to the map.
+- **Roles**: citizen, moderator, admin (Better Auth RBAC), enforced on every endpoint; pages only hide what you can't use.
+
+## Design decisions worth a look
+
+| Topic | Decision | Numbers / details |
+| --- | --- | --- |
+| Spatial queries | `geography` columns (metres), `ST_DWithin` for radius filters, KNN `<->` for "closest N" | `ST_DWithin` 2.1 ms vs `ST_Distance < x` 36 ms on 50k points |
+| Report paging | Started with a keyset cursor, moved to page numbers + search for the UX; measured both | `count(*)` is the real cost of page numbers, not `OFFSET` |
+| Search | `ILIKE` with `%` / `_` escaped, `#id` matches, `pg_trgm` GIN index | rare term: 2.1 ms with the index vs 26 ms without |
+| Nearest point per row | `LEFT JOIN LATERAL … <-> … LIMIT 1` **after** paging | 4.5 ms vs 2.9 s when done before paging |
+| Hotspots | `ST_DWithin` join driven from the ~340 unresolved reports, not 50k points | 17 ms vs 149 ms |
+| Weekly trend | Weeks bucketed with `date_trunc(…, 'Europe/Athens')` | correct across daylight-saving changes; one GiST scan instead of 12 |
+| Schema | dbmate migrations own everything, Better Auth tables included; a startup check prints the SQL if Better Auth's schema drifts | existing DB was baselined, not wiped |
+| Sample data | `is_sample` column, seed/remove per entity in a transaction holding an advisory lock | removing never touches your data; two parallel clicks → one 200, one 409 |
+| API contract | Zod on every input, one `parseInput` helper → `400 { field: [messages] }`; 401 / 403 / 404 / 409 / 422 | |
+
+Every query was proven in `db/queries/` before it went into a handler. Full EXPLAIN results: [docs/performance.md](docs/performance.md).
+
+## Tests
+
+`make test` builds the production app, starts it against a fresh `dumpwatch_test` database, and runs 32 API tests with `node:test` (about 15 s). They check auth on every endpoint, validation errors, paging, search escaping, the nearest-point and hotspot queries against brute-force SQL, the seed manager's locking, and sign-in rate limiting. CI runs `make typecheck` and `make test` on every push.
 
 ## Make targets
 
-| target                 | does                                              |
-| ---------------------- | ------------------------------------------------- |
-| `make up` / `down`     | start / stop the stack                            |
-| `make logs`            | follow logs                                       |
-| `make sh`              | shell in the app container                        |
-| `make psql`            | psql into the database                            |
-| `make install pkg=foo` | add an npm package (use this, not host `npm i`)   |
-| `make typecheck`       | type-check app and server (vue-tsc)               |
-| `make test`            | API tests against a fresh test DB + production build |
-| `make skills`          | link `.agents/skills` into `.claude/skills`       |
-| `make migrate`         | apply pending migrations (`make up` does it too)  |
-| `make migration name=x`| new migration file in `db/migrations/`            |
-| `make rollback`        | undo the latest migration                         |
-| `make seed`            | load sample zones, points, reports (or use the wand) |
-| `make reset`           | delete DB + node_modules volumes (all data lost)  |
+| target | does |
+| --- | --- |
+| `make up` / `down` | start / stop the stack |
+| `make logs` / `sh` / `psql` | follow logs, shell in the app, psql into the database |
+| `make typecheck` | type-check app and server (vue-tsc) |
+| `make test` | API tests against a fresh test DB + production build |
+| `make migrate` / `rollback` | apply pending migrations / undo the latest |
+| `make migration name=x` | new migration file in `db/migrations/` |
+| `make seed` | load all sample data (same SQL as the wand) |
+| `make sql f=file.sql` | run a SQL file, e.g. an EXPLAIN experiment in `db/queries/` |
+| `make install pkg=foo` | add an npm package (inside the container) |
+| `make reset` | delete the DB and node_modules volumes (all data lost) |
 
-## Layout
+## Where things are
 
-- `app/pages/` — routes (`login.vue`, `index.vue` map); `app/middleware/auth.global.ts` redirects to `/login` when signed out
-- `app/components/` — `MapView.client.vue` (Leaflet), `AppLoader.vue` (shared loader)
-- `server/api/` — Nitro routes; `server/api/auth/[...all].ts` is Better Auth
-- `server/utils/` — `db()` pg pool, `auth` + `requirePermission(event, { report: ["delete"] })`
-- `server/plugins/auth-bootstrap.ts` — checks the Better Auth schema and seeds the admin on startup
-- `shared/utils/permissions.ts` — roles and permissions (used by client and server)
-- `db/migrations/` — schema changes (dbmate); `db/schema.sql` — generated current schema; `db/seed/` — sample data, loaded from the wand in the top bar (admins, dev) or `make seed`
+- `app/`: pages, one composable per feature (state + fetching), components that draw state and emit events, a small shared UI kit in `components/shared/`
+- `server/api/`: Nitro file routes, SQL as constants in each handler; `server/utils/` for the pool, auth guards, validation, seed logic
+- `shared/`: types and limits used by both sides
+- `db/migrations/` (dbmate), `db/schema.sql` (generated), `db/seed/`, `db/queries/` + `db/explain/` (EXPLAIN experiments)
+- `tests/`: API tests
 
-## Database
+More detail: [docs/architecture.md](docs/architecture.md) (file map, data model, auth), [docs/PROGRESS.md](docs/PROGRESS.md) (what's done, what's next), [docs/design/multi-tenancy.md](docs/design/multi-tenancy.md) (planned: municipalities, contractors, row-level security).
 
-Connect any client to `localhost:5432` with the `POSTGRES_*` values from `.env` (default `dumpwatch`).
-PostGIS takes `(lng, lat)`; Leaflet takes `[lat, lng]`.
-Zones are land only (coastline © OpenStreetMap contributors, ODbL); seeded points and reports are generated inside them, and the nearby API returns `inServiceArea: false` for clicks outside, including the sea.
+## Notes
 
-## Spatial query benchmarks
-
-Query 1 (collection points within 500 m of a spot in Kentro, closest 20) on 50,000 points, plus two variants.
-Warm session, JIT off. Run with `make -s sql f=db/queries/05_explain_nearby.sql` (and `06`, `07`); plans are in `db/explain/`.
-
-| Query | Plan | Rows checked | Time |
-| --- | --- | --- | --- |
-| `ST_DWithin(location, p, 500)` with GiST index | Bitmap Index Scan | 1,927 | 2.1 ms |
-| `ST_DWithin(location, p, 500)` without index | Seq Scan | 50,000 | 33 ms |
-| `ST_Distance(location, p) < 500` with GiST index | Seq Scan | 50,000 | 36 ms |
-| `ORDER BY location <-> p LIMIT 20` (KNN, no radius) | Index Scan, Order By | 20 | 0.1 ms |
-
-- `ST_DWithin` uses the index: a bounding-box check finds candidates, then the exact distance check runs on those only.
-- `ST_Distance(...) < x` can't use the index, so it scans every row even when the index exists.
-- KNN is fastest but has no radius: it always returns 20 points, however far away.
-
-<details>
-<summary>Query 1 plan with the GiST index</summary>
-
-```
- Limit  (cost=24402.71..24402.72 rows=5 width=41) (actual time=2.040..2.042 rows=20.00 loops=1)
-   Buffers: shared hit=552
-   ->  Sort  (cost=24402.71..24402.72 rows=5 width=41) (actual time=2.040..2.041 rows=20.00 loops=1)
-         Sort Key: (st_distance(location, '0101000020E61000003333333333F3364052B81E85EB514440'::geography, true))
-         Sort Method: top-N heapsort  Memory: 27kB
-         Buffers: shared hit=552
-         ->  Bitmap Heap Scan on collection_points  (cost=78.63..24402.65 rows=5 width=41) (actual time=0.158..1.929 rows=1119.00 loops=1)
-               Filter: st_dwithin(location, '0101000020E61000003333333333F3364052B81E85EB514440'::geography, '500'::double precision, true)
-               Rows Removed by Filter: 808
-               Heap Blocks: exact=522
-               Buffers: shared hit=552
-               ->  Bitmap Index Scan on collection_points_location_gix  (cost=0.00..78.63 rows=1897 width=0) (actual time=0.124..0.124 rows=1927.00 loops=1)
-                     Index Cond: (location && _st_expand('0101000020E61000003333333333F3364052B81E85EB514440'::geography, '500'::double precision))
-                     Index Searches: 1
-                     Buffers: shared hit=30
- Planning Time: 0.530 ms
- Execution Time: 2.052 ms
-```
-</details>
-
-<details>
-<summary>Query 1 plan without the GiST index</summary>
-
-```
- Limit  (cost=626092.61..626092.62 rows=5 width=41) (actual time=33.095..33.097 rows=20.00 loops=1)
-   Buffers: shared hit=530
-   ->  Sort  (cost=626092.61..626092.62 rows=5 width=41) (actual time=33.095..33.096 rows=20.00 loops=1)
-         Sort Key: (st_distance(location, '0101000020E61000003333333333F3364052B81E85EB514440'::geography, true))
-         Sort Method: top-N heapsort  Memory: 27kB
-         Buffers: shared hit=530
-         ->  Seq Scan on collection_points  (cost=0.00..626092.55 rows=5 width=41) (actual time=0.077..32.985 rows=1119.00 loops=1)
-               Filter: st_dwithin(location, '0101000020E61000003333333333F3364052B81E85EB514440'::geography, '500'::double precision, true)
-               Rows Removed by Filter: 48881
-               Buffers: shared hit=530
- Planning Time: 0.032 ms
- Execution Time: 33.102 ms
-```
-</details>
-
-## Report list paging
-
-`GET /api/reports/list` first paged with a keyset cursor on `(reported_at, id)`; the numbers below are from that version. It now uses page numbers (`OFFSET` + `count(*)`) with search; that experiment is `db/queries/09_report_search.sql`, plans in `db/explain/q9_report_search.txt`.
-Run with `make -s sql f=db/queries/08_report_list.sql`: it adds 100,000 reports inside a transaction, explains, then rolls back. Plans are in `db/explain/q8_report_list.txt`.
-
-| Case | Plan | Rows read | Time |
-| --- | --- | --- | --- |
-| Staff, first page | Index Scan Backward `(reported_at, id)` | 26 | 0.02 ms |
-| Staff, page 201, keyset cursor | Index Scan Backward, row comparison in Index Cond | 26 | 0.02 ms |
-| Staff, page 201, `OFFSET 5000` | Index Scan Backward, skips 5,000 rows | 5,026 | 1.1 ms |
-| Staff, `status = open`, page 201 | Index Scan Backward `(reported_at, id)` + Filter | 78 | 0.02 ms |
-| Citizen, first page | Index Scan Backward `(reported_by, reported_at, id)` | 26 | 0.04 ms |
-| Citizen, generic plan | Index Scan Backward + Filter on every condition | 26,494 | 1.9 ms |
-| Staff, first page, no list indexes | Parallel Seq Scan + top-N sort | 100,500 | 20 ms |
-
-- Keyset cost stays flat on any page; `OFFSET` (same WHERE clause) reads and throws away every skipped row, so it grows with page depth.
-- The cursor is only an id. The query looks up its `(reported_at, id)` in SQL (scoped to the same reporter for citizens), because a JS `Date` keeps milliseconds and a millisecond cursor would skip rows.
-- With a status that matches a third of the rows, filtering the time index is cheaper; when the status is rare (about 1% of rows), the planner uses `(status, reported_at, id)` with the whole keyset condition in the Index Cond.
-- `$2 IS NULL OR status = $2` is fine because `pg` sends unnamed statements, which Postgres plans with the real values. A reused named statement can get a generic plan, and then every condition becomes a filter.
-
-## Editor types
-
-`node_modules` lives in a Docker volume. For editor autocomplete, run `npm install` on the host once (optional).
+- PostGIS takes `(lng, lat)`; Leaflet takes `[lat, lng]`.
+- Zones are land only (coastline © OpenStreetMap contributors, ODbL), so the sea is outside the service area.
+- On Windows, keep the repo inside WSL2, or hot reload won't see file changes.
+- `node_modules` lives in a Docker volume; run `npm install` on the host once if you want editor autocomplete.
