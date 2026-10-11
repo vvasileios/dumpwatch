@@ -37,7 +37,7 @@ app/
   components/                  MapView.client.vue, LocationPicker.client.vue, NearbyPanel.vue,
                                ReportsLayerCard.vue (v-model:show), AppMenubar.vue,
                                AppCommandPalette.vue (Cmd/Ctrl+K), AppLoader.vue, AppEmptyState.vue
-  components/reports/          ReportsTable.vue (rows, sortable headers, sticky thead, emits status/sort), ReportsPagination.vue (v-model:size, emits go), ReportsForm.vue (v-model:description, emits locate/submit);
+  components/reports/          ReportsTable.vue (rows, sortable headers, sticky thead, nearest collection point column, emits status/sort), ReportsPagination.vue (v-model:size, emits go), ReportsForm.vue (v-model:description, emits locate/submit);
                                file names start with the folder name so Nuxt dedupes the prefix (<ReportsTable>, not <ReportsReportsTable>)
   components/zones/            ZonesCard.vue (toggle button, aria-pressed, status counts + avg time to clear), ZonesTrend.vue (HTML/CSS bar chart:
                                bars with sr-only text + hover/focus tooltip, current week faded "so far", labels via NuxtTime in CITY_TIMEZONE)
@@ -56,7 +56,7 @@ server/
   api/reports.get.ts           bbox query (&& envelope), span-limited
   api/reports.post.ts          create, 422 outside service area
   api/reports/[id].patch.ts    status change, keeps cleared_at consistent
-  api/reports/list.get.ts      OFFSET page numbers + count (page clamped to the last page); q = description ILIKE (%/_ escaped) or id; sort by whitelisted ORDER BY fragments; own vs all via report:moderate; returns { reports, total, page, canModerate }
+  api/reports/list.get.ts      OFFSET page numbers + count (page clamped to the last page); q = description ILIKE (%/_ escaped) or id; sort by whitelisted ORDER BY fragments; own vs all via report:moderate; page rows (subquery with LIMIT/OFFSET) then LEFT JOIN LATERAL KNN `<->` for the nearest collection point (25 lookups, not one per report); returns { reports: ReportListItem[] (DumpReport + nearest), total, page, canModerate }
   api/stats/zones.get.ts       report:moderate; query 3: per-zone rows UNION ALL a city row straight from dump_reports (border reports count once) → { city, zones }; counts ::int, avg time as hours ::float8
   api/stats/weekly.get.ts      report:moderate; ?zone (404 if missing, from the same query); query 4: reports bucketed once with date_trunc('week', ts, Europe/Athens) (DST-safe), LEFT JOINed onto generate_series weeks; zone variant scans the GiST index once
   utils/db.ts                  lazy pg Pool from runtimeConfig.databaseUrl
@@ -75,6 +75,7 @@ db/
   queries/01-04                core queries
   queries/05-07                EXPLAIN experiments (index on/off inside a rolled-back txn)
   queries/08                   report list paging on 100k rows (rolled-back txn)
+  queries/10                   nearest point per page row vs per report vs no GiST, on 100k reports (rolled-back txn)
   queries/09                   report search + count + OFFSET on 100k rows, trigram index on/off (rolled-back txn)
   explain/                     saved plans
 ```

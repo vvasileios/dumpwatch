@@ -1,13 +1,13 @@
 <script setup lang="ts">
 const props = defineProps<{
-    reports: DumpReport[];
+    reports: ReportListItem[];
     canModerate: boolean;
     saving: Set<string>;
     sort: ReportSort;
     dir: SortDir;
 }>();
 const emit = defineEmits<{
-    status: [report: DumpReport, status: ReportStatus];
+    status: [report: ReportListItem, status: ReportStatus];
     sort: [key: ReportSort];
 }>();
 
@@ -15,6 +15,7 @@ const columns: { label: string; sort?: ReportSort }[] = [
     { label: "#" },
     { label: "Status", sort: "status" },
     { label: "Description" },
+    { label: "Nearest point" },
     { label: "Reported", sort: "reported" },
     { label: "Cleared", sort: "cleared" },
 ];
@@ -114,6 +115,41 @@ watch(
                         :title="r.description ?? undefined"
                     >
                         {{ r.description ?? "—" }}
+                    </td>
+                    <td class="px-4 py-3 whitespace-nowrap">
+                        <span
+                            v-if="r.nearest"
+                            class="flex items-center gap-2"
+                        >
+                            <span
+                                class="size-2 shrink-0 rounded-full"
+                                :style="{
+                                    backgroundColor:
+                                        pointTypeColors[r.nearest.type],
+                                }"
+                                aria-hidden="true"
+                            />
+                            <span>
+                                <span
+                                    class="text-zinc-800 capitalize dark:text-zinc-100"
+                                    >{{ r.nearest.type }}</span
+                                >{{ " " }}<span
+                                    class="text-zinc-500 tabular-nums dark:text-zinc-400"
+                                    >{{ formatDistance(r.nearest.meters) }}</span
+                                ><template v-if="r.nearest.fill_level !== null"
+                                    >{{ " · " }}<span
+                                        class="tabular-nums"
+                                        :class="
+                                            r.nearest.fill_level >= 80
+                                                ? 'text-red-600 dark:text-red-400'
+                                                : 'text-zinc-500 dark:text-zinc-400'
+                                        "
+                                        >{{ r.nearest.fill_level }}% full</span
+                                    ></template
+                                >
+                            </span>
+                        </span>
+                        <span v-else aria-label="No collection point">—</span>
                     </td>
                     <td
                         class="px-4 py-3 whitespace-nowrap text-zinc-500 dark:text-zinc-400"

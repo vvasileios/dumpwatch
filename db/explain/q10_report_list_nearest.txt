@@ -1,0 +1,77 @@
+SET
+BEGIN
+INSERT 0 100000
+ANALYZE
+== 1. nearest point AFTER paging: KNN runs for the 25 rows of the page
+                                                             QUERY PLAN                                                              
+-------------------------------------------------------------------------------------------------------------------------------------
+ Nested Loop Left Join (actual time=3.540..4.422 rows=25.00 loops=1)
+   Buffers: shared hit=514 read=10
+   ->  Limit (actual time=0.005..0.030 rows=25.00 loops=1)
+         Buffers: shared hit=30
+         ->  Index Scan Backward using dump_reports_reported_at_id_idx on dump_reports (actual time=0.005..0.028 rows=25.00 loops=1)
+               Index Searches: 1
+               Buffers: shared hit=30
+   ->  Limit (actual time=0.175..0.175 rows=1.00 loops=25)
+         Buffers: shared hit=484 read=10
+         ->  Index Scan using collection_points_location_gix on collection_points cp (actual time=0.175..0.175 rows=1.00 loops=25)
+               Order By: (location <-> dump_reports.location)
+               Index Searches: 25
+               Buffers: shared hit=484 read=10
+ Planning:
+   Buffers: shared hit=227
+ Planning Time: 0.249 ms
+ Execution Time: 4.461 ms
+(17 rows)
+
+== 2. nearest point BEFORE paging, sorted by distance: KNN for every report
+                                                                    QUERY PLAN                                                                     
+---------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit (actual time=2908.175..2908.178 rows=25.00 loops=1)
+   Buffers: shared hit=595207 read=17
+   ->  Sort (actual time=2908.175..2908.177 rows=25.00 loops=1)
+         Sort Key: ((round(st_distance(cp.location, r.location, true)))::integer) DESC
+         Sort Method: top-N heapsort  Memory: 26kB
+         Buffers: shared hit=595207 read=17
+         ->  Nested Loop Left Join (actual time=0.040..2902.725 rows=100500.00 loops=1)
+               Buffers: shared hit=595204 read=17
+               ->  Seq Scan on dump_reports r (actual time=0.003..4.577 rows=100500.00 loops=1)
+                     Buffers: shared hit=1330
+               ->  Limit (actual time=0.029..0.029 rows=1.00 loops=100500)
+                     Buffers: shared hit=593874 read=17
+                     ->  Index Scan using collection_points_location_gix on collection_points cp (actual time=0.029..0.029 rows=1.00 loops=100500)
+                           Order By: (location <-> r.location)
+                           Index Searches: 100500
+                           Buffers: shared hit=593874 read=17
+ Planning:
+   Buffers: shared hit=7
+ Planning Time: 0.070 ms
+ Execution Time: 2908.193 ms
+(20 rows)
+
+== 3. KNN without the GiST index
+DROP INDEX
+                                                             QUERY PLAN                                                              
+-------------------------------------------------------------------------------------------------------------------------------------
+ Nested Loop Left Join (actual time=10.860..270.876 rows=25.00 loops=1)
+   Buffers: shared hit=13278
+   ->  Limit (actual time=0.004..0.045 rows=25.00 loops=1)
+         Buffers: shared hit=28
+         ->  Index Scan Backward using dump_reports_reported_at_id_idx on dump_reports (actual time=0.004..0.040 rows=25.00 loops=1)
+               Index Searches: 1
+               Buffers: shared hit=28
+   ->  Limit (actual time=10.832..10.832 rows=1.00 loops=25)
+         Buffers: shared hit=13250
+         ->  Sort (actual time=10.831..10.831 rows=1.00 loops=25)
+               Sort Key: ((cp.location <-> dump_reports.location))
+               Sort Method: top-N heapsort  Memory: 25kB
+               Buffers: shared hit=13250
+               ->  Seq Scan on collection_points cp (actual time=0.001..8.761 rows=50000.00 loops=25)
+                     Buffers: shared hit=13250
+ Planning:
+   Buffers: shared hit=4
+ Planning Time: 0.107 ms
+ Execution Time: 270.895 ms
+(19 rows)
+
+ROLLBACK

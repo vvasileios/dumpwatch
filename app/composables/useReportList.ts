@@ -47,7 +47,7 @@ export async function useReportList() {
     const router = useRouter();
     const params = computed(() => parseQuery(route.query));
 
-    const reports = ref<DumpReport[]>([]);
+    const reports = ref<ReportListItem[]>([]);
     const saving = ref(new Set<string>());
     const actionError = ref<string | null>(null);
     const search = ref(params.value.q);
@@ -121,7 +121,7 @@ export async function useReportList() {
     );
     onBeforeUnmount(() => clearTimeout(searchTimer));
 
-    async function updateStatus(report: DumpReport, status: ReportStatus) {
+    async function updateStatus(report: ReportListItem, status: ReportStatus) {
         const previous = report.status;
         report.status = status;
         saving.value.add(report.id);
@@ -132,7 +132,7 @@ export async function useReportList() {
                 { method: "PATCH", body: { status } },
             );
             const i = reports.value.findIndex((r) => r.id === updated.id);
-            if (i !== -1) reports.value[i] = updated;
+            if (i !== -1) reports.value[i] = { ...reports.value[i]!, ...updated };
         } catch (err) {
             console.error(err);
             report.status = previous;

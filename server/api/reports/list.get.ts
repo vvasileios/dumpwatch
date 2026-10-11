@@ -17,14 +17,33 @@ const ORDER: Record<ReportSort, (dir: "ASC" | "DESC") => string> = {
         `array_position(ARRAY['open', 'assigned', 'cleared'], status) ${dir}, reported_at DESC, id DESC`,
 };
 
-const rowsQuery = (sort: ReportSort, dir: SortDir) => `
-	SELECT id, status, description, reported_at, cleared_at,
-		ST_Y(location::geometry) AS lat, ST_X(location::geometry) AS lng
-	FROM dump_reports
-	${WHERE}
-	ORDER BY ${ORDER[sort](dir === "asc" ? "ASC" : "DESC")}
-	LIMIT $5 OFFSET $6
+const rowsQuery = (sort: ReportSort, dir: SortDir) => {
+    const order = ORDER[sort](dir === "asc" ? "ASC" : "DESC");
+    return `
+	SELECT p.id, p.status, p.description, p.reported_at, p.cleared_at,
+		ST_Y(p.location::geometry) AS lat, ST_X(p.location::geometry) AS lng,
+		n.nearest
+	FROM (
+		SELECT id, status, description, reported_at, cleared_at, location
+		FROM dump_reports
+		${WHERE}
+		ORDER BY ${order}
+		LIMIT $5 OFFSET $6
+	) p
+	LEFT JOIN LATERAL (
+		SELECT json_build_object(
+			'id', cp.id::text,
+			'type', cp.type,
+			'fill_level', cp.fill_level,
+			'meters', round(ST_Distance(cp.location, p.location))::int
+		) AS nearest
+		FROM collection_points cp
+		ORDER BY cp.location <-> p.location
+		LIMIT 1
+	) n ON true
+	ORDER BY ${order}
 `;
+};
 
 const pageParam = z
     .string()
@@ -69,7 +88,7 @@ export default defineEventHandler(async (event): Promise<DumpReportList> => {
     const page = Math.min(query.page ?? 1, Math.max(1, Math.ceil(total / size)));
 
     const { rows: reports } = total
-        ? await db().query<DumpReport>(
+        ? await db().query<ReportListItem>(
 			rowsQuery(query.sort ?? "reported", query.dir ?? "desc"),
 			[...params, size, (page - 1) * size],
 		)

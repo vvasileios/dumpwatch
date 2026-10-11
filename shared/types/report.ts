@@ -1,4 +1,5 @@
 import type { REPORT_SORTS, REPORT_STATUSES } from "../utils/reports";
+import type { CollectionPointType } from "./collection-point";
 
 export type ReportStatus = (typeof REPORT_STATUSES)[number];
 export type ReportSort = (typeof REPORT_SORTS)[number];
@@ -20,8 +21,19 @@ export interface DumpReport {
     cleared_at: string | null;
 }
 
+export interface NearestPoint {
+    id: string;
+    type: CollectionPointType;
+    fill_level: number | null;
+    meters: number;
+}
+
+export interface ReportListItem extends DumpReport {
+    nearest: NearestPoint | null;
+}
+
 export interface DumpReportList {
-    reports: DumpReport[];
+    reports: ReportListItem[];
     total: number;
     page: number;
     canModerate: boolean;
