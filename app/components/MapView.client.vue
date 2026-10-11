@@ -5,14 +5,31 @@ const props = defineProps<{
     center: { lat: number; lng: number } | null;
     radius: number;
     points: NearbyPoint[];
+    reports: DumpReport[];
 }>();
-const emit = defineEmits<{ pick: [lat: number, lng: number] }>();
+
+const emit = defineEmits<{
+    pick: [lat: number, lng: number];
+    bounds: [bbox: Bbox];
+}>();
 
 const el = ref<HTMLElement>();
 let map: L.Map | undefined;
 const searchArea = L.layerGroup();
 const markers = L.layerGroup();
+const reportMarkers = L.layerGroup();
 let circle: L.Circle | undefined;
+
+function emitBounds() {
+    if (!map) return;
+    const b = map.getBounds();
+    emit("bounds", [
+        Math.max(b.getWest(), -180),
+        b.getSouth(),
+        Math.min(b.getEast(), 180),
+        b.getNorth(),
+    ]);
+}
 
 function popupFor(p: NearbyPoint) {
     const root = document.createElement("div");
@@ -24,6 +41,20 @@ function popupFor(p: NearbyPoint) {
         p.fill_level === null ? "Fill level unknown" : `${p.fill_level}% full`;
     details.textContent = `${fill} · ${formatDistance(p.meters)} away`;
     root.append(title, details);
+    return root;
+}
+
+function reportPopupFor(r: DumpReport) {
+    const root = document.createElement("div");
+    const title = document.createElement("strong");
+    title.className = "capitalize";
+    title.textContent = r.status;
+    const details = document.createElement("div");
+    details.textContent = r.description;
+    const date = document.createElement("div");
+    date.className = "text-xs text-zinc-500";
+    date.textContent = `Reported ${new Date(r.reported_at).toLocaleDateString()}`;
+    root.append(title, details, date);
     return root;
 }
 
@@ -72,16 +103,36 @@ function drawMarkers() {
     }
 }
 
+function drawReports() {
+    reportMarkers.clearLayers();
+    for (const r of props.reports) {
+        L.circleMarker([r.lat, r.lng], {
+            color: reportStatusColors[r.status],
+            weight: 3,
+            fillColor: "#ffffff",
+            fillOpacity: 1,
+            radius: 6,
+            bubblingMouseEvents: false,
+        })
+            .bindPopup(reportPopupFor(r))
+            .addTo(reportMarkers);
+    }
+}
+
 useLeafletMap(el, (m) => {
     map = m;
     searchArea.addTo(m);
     markers.addTo(m);
+    reportMarkers.addTo(m);
+    m.on("moveend", emitBounds);
     m.on("click", (e) => {
         const { lat, lng } = e.latlng.wrap();
         emit("pick", lat, lng);
     });
     drawSearchArea();
     drawMarkers();
+    drawReports();
+    emitBounds();
 });
 
 watch(() => props.center, drawSearchArea);
@@ -90,6 +141,8 @@ watch(
     (r) => circle?.setRadius(r),
 );
 watch(() => props.points, drawMarkers);
+
+watch(() => props.reports, drawReports);
 </script>
 
 <template>

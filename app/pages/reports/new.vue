@@ -202,14 +202,13 @@ const field =
                             v-if="locating"
                             size="sm"
                             :delay="0"
-                            label="Finding your location"
                         />
                         <Icon
                             v-else
                             name="lucide:locate-fixed"
                             class="size-4"
                         />
-                        Use my location
+                        {{ locating ? "Locating…" : "Use my location" }}
                     </button>
                 </div>
                 <p
@@ -300,7 +299,6 @@ const field =
                         v-if="submitting"
                         size="sm"
                         :delay="0"
-                        label="Sending report"
                     />
                     {{ submitting ? "Sending…" : "Send report" }}
                 </button>

@@ -6,7 +6,7 @@ const props = withDefaults(
         overlay?: boolean;
         delay?: number;
     }>(),
-    { size: "md", label: "Loading", overlay: false, delay: 150 },
+    { size: "md", overlay: false, delay: 150 },
 );
 
 const sizes = { sm: "size-4", md: "size-8", lg: "size-12" };
@@ -23,8 +23,9 @@ onBeforeUnmount(() => clearTimeout(timer));
 <template>
     <div
         v-if="visible"
-        role="status"
-        aria-live="polite"
+        :role="label ? 'status' : undefined"
+        :aria-live="label ? 'polite' : undefined"
+        :aria-hidden="label ? undefined : 'true'"
         :class="
             overlay
                 ? 'fixed inset-0 z-1000 grid place-items-center bg-white/70 text-emerald-600 backdrop-blur-sm dark:bg-zinc-950/70 dark:text-emerald-400'
@@ -54,6 +55,7 @@ onBeforeUnmount(() => clearTimeout(timer));
                 />
             </svg>
             <span
+                v-if="label"
                 :class="
                     overlay
                         ? 'text-sm font-medium text-zinc-600 dark:text-zinc-300'

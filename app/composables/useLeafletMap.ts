@@ -5,12 +5,16 @@ export function useLeafletMap(
     onReady: (map: L.Map) => void,
 ) {
     let map: L.Map | undefined;
+    let observer: ResizeObserver | undefined;
     let disposed = false;
 
     onMounted(async () => {
         await nextTick();
         if (disposed || !el.value) return;
-        map = L.map(el.value, { zoomControl: false }).setView(
+        map = L.map(el.value, {
+            zoomControl: false,
+            worldCopyJump: true,
+        }).setView(
             [40.63, 22.945],
             14,
         );
@@ -19,11 +23,14 @@ export function useLeafletMap(
             maxZoom: 19,
             attribution: "&copy; OpenStreetMap contributors",
         }).addTo(map);
+        observer = new ResizeObserver(() => map?.invalidateSize());
+        observer.observe(el.value);
         onReady(map);
     });
 
     onBeforeUnmount(() => {
         disposed = true;
+        observer?.disconnect();
         map?.remove();
         map = undefined;
     });

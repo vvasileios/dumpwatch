@@ -80,7 +80,6 @@ const nearest = computed(() => props.points.slice(0, 5));
                 v-if="loading || locating"
                 size="sm"
                 :delay="0"
-                label="Searching"
             />
             {{ status }}
         </p>

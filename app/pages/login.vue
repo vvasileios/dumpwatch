@@ -254,7 +254,6 @@ const button =
                                 v-if="loading"
                                 size="sm"
                                 :delay="0"
-                                label="Signing in"
                             />
                             {{ loading ? "Signing in…" : "Sign in" }}
                         </button>
@@ -329,7 +328,6 @@ const button =
                                 v-if="loading"
                                 size="sm"
                                 :delay="0"
-                                label="Verifying"
                             />
                             {{ loading ? "Verifying…" : "Verify" }}
                         </button>
