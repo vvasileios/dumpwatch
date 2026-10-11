@@ -13,6 +13,28 @@ const {
 
 const { show, bbox, reports, loadingReports, tooLarge, errorReports } =
     useReports();
+
+const route = useRoute();
+const focus = computed(() => {
+    const decimal = (v: unknown) =>
+        typeof v === "string" && /^-?\d{1,3}(\.\d+)?$/.test(v);
+    if (!decimal(route.query.lat) || !decimal(route.query.lng)) return null;
+    const lat = Number(route.query.lat);
+    const lng = Number(route.query.lng);
+    if (Math.abs(lat) > 90 || Math.abs(lng) > 180) return null;
+    const radius =
+        HOTSPOT_RADII.find((r) => String(r) === route.query.radius) ??
+        HOTSPOT_RADIUS;
+    const type =
+        (Object.keys(pointTypeColors) as CollectionPointType[]).find(
+            (t) => t === route.query.type,
+        ) ?? null;
+    return { lat, lng, radius, type };
+});
+
+onMounted(() => {
+    if (focus.value) show.value = true;
+});
 </script>
 
 <template>
@@ -23,6 +45,7 @@ const { show, bbox, reports, loadingReports, tooLarge, errorReports } =
                 :radius="radius"
                 :points="points"
                 :reports="reports"
+                :focus="focus"
                 @pick="search"
                 @bounds="bbox = $event"
             />

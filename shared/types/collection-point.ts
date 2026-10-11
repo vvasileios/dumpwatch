@@ -13,3 +13,13 @@ export interface NearbyResponse {
     inServiceArea: boolean;
     points: NearbyPoint[];
 }
+
+export interface Hotspot {
+    id: string;
+    type: CollectionPointType;
+    fill_level: number | null;
+    lat: number;
+    lng: number;
+    reports_nearby: number;
+    oldest_days: number;
+}

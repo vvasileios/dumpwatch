@@ -1,0 +1,69 @@
+SET
+== 1. hotspots, driven from the ~340 unresolved reports (GiST on collection_points per report)
+                                                                         QUERY PLAN                                                                          
+-------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit (actual time=15.746..17.055 rows=50.00 loops=1)
+   Buffers: shared hit=10307
+   ->  Sort (actual time=15.744..17.051 rows=50.00 loops=1)
+         Sort Key: ((count(*))::integer) DESC, cp.fill_level DESC NULLS LAST, cp.id
+         Sort Method: top-N heapsort  Memory: 30kB
+         Buffers: shared hit=10307
+         ->  GroupAggregate (actual time=14.067..16.644 rows=3659.00 loops=1)
+               Group Key: cp.id
+               Buffers: shared hit=10301
+               ->  Gather Merge (actual time=14.056..15.675 rows=3782.00 loops=1)
+                     Workers Planned: 1
+                     Workers Launched: 1
+                     Buffers: shared hit=10301
+                     ->  Sort (actual time=8.922..8.985 rows=1891.00 loops=2)
+                           Sort Key: cp.id
+                           Sort Method: quicksort  Memory: 205kB
+                           Buffers: shared hit=10301
+                           Worker 0:  Sort Method: quicksort  Memory: 103kB
+                           ->  Nested Loop (actual time=3.837..8.707 rows=1891.00 loops=2)
+                                 Buffers: shared hit=10293
+                                 ->  Parallel Seq Scan on dump_reports r (actual time=0.003..0.648 rows=168.50 loops=2)
+                                       Filter: (status = ANY ('{open,assigned}'::text[]))
+                                       Rows Removed by Filter: 82
+                                       Buffers: shared hit=1330
+                                 ->  Index Scan using collection_points_location_gix on collection_points cp (actual time=0.032..0.047 rows=11.22 loops=337)
+                                       Index Cond: (location && _st_expand(r.location, '50'::double precision))
+                                       Filter: st_dwithin(location, r.location, '50'::double precision, true)
+                                       Rows Removed by Filter: 8
+                                       Index Searches: 337
+                                       Buffers: shared hit=8963
+ Planning:
+   Buffers: shared hit=448
+ Planning Time: 6.928 ms
+ Execution Time: 17.102 ms
+(34 rows)
+
+== 2. same question asked from the 50k points (correlated count per point)
+                                                                     QUERY PLAN                                                                     
+----------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit (actual time=149.450..149.454 rows=50.00 loops=1)
+   Buffers: shared hit=295662
+   ->  Sort (actual time=149.449..149.451 rows=50.00 loops=1)
+         Sort Key: ((count(*))::integer) DESC, cp.fill_level DESC NULLS LAST, cp.id
+         Sort Method: top-N heapsort  Memory: 28kB
+         Buffers: shared hit=295662
+         ->  Nested Loop (actual time=0.048..149.160 rows=3659.00 loops=1)
+               Buffers: shared hit=295662
+               ->  Seq Scan on collection_points cp (actual time=0.002..1.409 rows=50000.00 loops=1)
+                     Buffers: shared hit=530
+               ->  Aggregate (actual time=0.003..0.003 rows=0.07 loops=50000)
+                     Filter: ((count(*))::integer > 0)
+                     Rows Removed by Filter: 1
+                     Buffers: shared hit=295132
+                     ->  Index Scan using dump_reports_location_gix on dump_reports r (actual time=0.003..0.003 rows=0.08 loops=50000)
+                           Index Cond: (location && _st_expand(cp.location, '50'::double precision))
+                           Filter: ((status = ANY ('{open,assigned}'::text[])) AND st_dwithin(cp.location, location, '50'::double precision, true))
+                           Rows Removed by Filter: 0
+                           Index Searches: 50000
+                           Buffers: shared hit=295132
+ Planning:
+   Buffers: shared hit=80
+ Planning Time: 0.175 ms
+ Execution Time: 149.475 ms
+(24 rows)
+

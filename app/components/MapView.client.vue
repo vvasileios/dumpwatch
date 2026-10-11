@@ -5,7 +5,13 @@ const props = defineProps<{
     center: { lat: number; lng: number } | null;
     radius: number;
     points: NearbyPoint[];
-    reports: DumpReport[];
+    reports: ReportWithNearest[];
+    focus?: {
+        lat: number;
+        lng: number;
+        radius: number;
+        type: CollectionPointType | null;
+    } | null;
 }>();
 
 const emit = defineEmits<{
@@ -18,6 +24,7 @@ let map: L.Map | undefined;
 const searchArea = L.layerGroup();
 const markers = L.layerGroup();
 const reportMarkers = L.layerGroup();
+const focusLayer = L.layerGroup();
 let circle: L.Circle | undefined;
 
 function emitBounds() {
@@ -44,7 +51,7 @@ function popupFor(p: NearbyPoint) {
     return root;
 }
 
-function reportPopupFor(r: DumpReport) {
+function reportPopupFor(r: ReportWithNearest) {
     const root = document.createElement("div");
     const title = document.createElement("strong");
     title.className = "capitalize";
@@ -54,7 +61,13 @@ function reportPopupFor(r: DumpReport) {
     const date = document.createElement("div");
     date.className = "text-xs text-zinc-500";
     date.textContent = `Reported ${new Date(r.reported_at).toLocaleDateString()}`;
-    root.append(title, details, date);
+    const nearest = document.createElement("div");
+    nearest.className = "mt-1 text-xs";
+    nearest.textContent = r.nearest
+        ? `Nearest point: ${r.nearest.type}, ${formatDistance(r.nearest.meters)}` +
+          (r.nearest.fill_level === null ? "" : `, ${r.nearest.fill_level}% full`)
+        : "No collection point nearby";
+    root.append(title, details, date, nearest);
     return root;
 }
 
@@ -103,6 +116,35 @@ function drawMarkers() {
     }
 }
 
+function drawFocus() {
+    focusLayer.clearLayers();
+    const f = props.focus;
+    if (!f) return;
+    L.circle([f.lat, f.lng], {
+        radius: f.radius,
+        color: "#059669",
+        weight: 2,
+        dashArray: "6 6",
+        fillOpacity: 0.05,
+        interactive: false,
+    }).addTo(focusLayer);
+    L.circleMarker([f.lat, f.lng], {
+        radius: 13,
+        color: "#059669",
+        weight: 3,
+        fill: false,
+        interactive: false,
+    }).addTo(focusLayer);
+    L.circleMarker([f.lat, f.lng], {
+        radius: 7,
+        color: "#ffffff",
+        weight: 2,
+        fillColor: f.type ? pointTypeColors[f.type] : "#059669",
+        fillOpacity: 1,
+        interactive: false,
+    }).addTo(focusLayer);
+}
+
 function drawReports() {
     reportMarkers.clearLayers();
     for (const r of props.reports) {
@@ -124,7 +166,10 @@ useLeafletMap(el, (m) => {
     searchArea.addTo(m);
     markers.addTo(m);
     reportMarkers.addTo(m);
+    focusLayer.addTo(m);
     m.on("moveend", emitBounds);
+    if (props.focus) m.setView([props.focus.lat, props.focus.lng], 18);
+    drawFocus();
     m.on("click", (e) => {
         const { lat, lng } = e.latlng.wrap();
         emit("pick", lat, lng);
@@ -143,6 +188,7 @@ watch(
 watch(() => props.points, drawMarkers);
 
 watch(() => props.reports, drawReports);
+watch(() => props.focus, drawFocus);
 </script>
 
 <template>

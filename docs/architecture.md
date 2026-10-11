@@ -20,16 +20,17 @@ Pattern: state lives in a composable, components draw state and emit events, eve
 
 ```
 app/
-  pages/index.vue              map + nearby panel (slice 6) + reports layer (7c)
+  pages/index.vue              map + nearby panel (slice 6) + reports layer (7c); ?lat&lng&radius&type (hotspot "Show" link) opens at zoom 18 with the point highlighted, a dashed circle for the hotspot radius, and reports on (no nearby search)
   pages/reports/new.vue        report form (7b): map + <ReportsForm>, state in useReportForm
   pages/reports/index.vue      report list (7d): own for citizens, all + status select for staff; search, status filter, sortable columns, page numbers; all state in the URL (?q&status&page&size&sort&dir); one-shot "Report sent" banner
   pages/zones.vue              zone dashboard (8), staff only: city + per-zone cards, 12-week trend; selected zone in ?zone=
-  pages/collection-points.vue  staff-only placeholder (roles via definePageMeta)
+  pages/collection-points.vue  hotspots (10), staff only: points with open/assigned dumps within ?radius= (25/50/100 m), "Show" links to the map
   pages/login.vue              layout: false
   layouts/default.vue          menubar + window frame (maximize = full-bleed)
   middleware/auth.global.ts    fetches session → useState("session"); redirects; checks meta.roles
   composables/useNearby.ts     nearby state + fetch (abort, request counter)
   composables/useReportList.ts list state from route.query (parsed with defaults, invalid values ignored) → useFetch (SSR, refetch on change); writes go back to the URL (push for pages, replace for search after 300 ms); any change but page resets to page 1; PATCH status (optimistic, reverts on error)
+  composables/useHotspots.ts   useFetch (SSR) on ?radius=, radius is a writable computed that pushes the URL
   composables/useZoneDashboard.ts  two useFetch (SSR) in parallel: stats + weekly (query follows ?zone=, read with a regex); select() pushes the URL
   composables/useReportForm.ts report form state: draft save/restore on 401, geolocation race guard, error mapping, submit
   composables/useReports.ts    reports layer: watch [show, bbox] → 300 ms debounce → fetch (abort); span guard
@@ -39,11 +40,12 @@ app/
                                AppCommandPalette.vue (Cmd/Ctrl+K), AppLoader.vue, AppEmptyState.vue
   components/reports/          ReportsTable.vue (rows, sortable headers, sticky thead, nearest collection point column, emits status/sort), ReportsPagination.vue (v-model:size, emits go), ReportsForm.vue (v-model:description, emits locate/submit);
                                file names start with the folder name so Nuxt dedupes the prefix (<ReportsTable>, not <ReportsReportsTable>)
+  components/points/           PointsBadge.vue (type dot + type, optional distance, fill level red from 80%)
   components/zones/            ZonesCard.vue (toggle button, aria-pressed, status counts + avg time to clear), ZonesTrend.vue (HTML/CSS bar chart:
                                bars with sr-only text + hover/focus tooltip, current week faded "so far", labels via NuxtTime in CITY_TIMEZONE)
   components/shared/           UI kit, auto-imported as <SharedX>: Button (primary/secondary/ghost,
                                `to` renders NuxtLink, `loading`/`icon`), IconButton (required label),
-                               Field (label), Input (trailing slot), Textarea, Select (typed options),
+                               Field (label), Input (trailing slot), Textarea, Select (typed options), Table (generic: columns, optional sort, #cell-<key> slots, sticky header, scroll reset),
                                Checkbox; all form controls use v-model (defineModel)
   utils/                       nav.ts (one nav list, role-filtered), auth-client.ts, point-types.ts,
                                report-status.ts (reportStatusColors), field.ts (fieldClass: shared
@@ -53,6 +55,7 @@ server/
   api/auth/[...all].ts         Better Auth handler
   api/health.get.ts
   api/points/nearby.get.ts     query 1 + service-area guard
+  api/points/hotspots.get.ts   report:moderate; ST_DWithin join driven from unresolved reports, GROUP BY cp.id, top 50
   api/reports.get.ts           bbox query (&& envelope), span-limited
   api/reports.post.ts          create, 422 outside service area
   api/reports/[id].patch.ts    status change, keeps cleared_at consistent
@@ -61,6 +64,7 @@ server/
   api/stats/weekly.get.ts      report:moderate; ?zone (404 if missing, from the same query); query 4: reports bucketed once with date_trunc('week', ts, Europe/Athens) (DST-safe), LEFT JOINed onto generate_series weeks; zone variant scans the GiST index once
   utils/db.ts                  lazy pg Pool from runtimeConfig.databaseUrl
   utils/auth.ts                auth, requireSession, requirePermission, hasPermission
+  utils/nearest.ts             NEAREST_POINT_JOIN: LEFT JOIN LATERAL KNN on outer alias p (list and map endpoints)
   utils/validate.ts            parseInput(schema, input): Zod safeParse → 400 with fieldErrors (every handler)
   utils/geo.ts                 isInServiceArea (ST_Covers on zones)
   plugins/auth-bootstrap.ts    Better Auth migrations + admin seed on every start
@@ -76,6 +80,7 @@ db/
   queries/05-07                EXPLAIN experiments (index on/off inside a rolled-back txn)
   queries/08                   report list paging on 100k rows (rolled-back txn)
   queries/10                   nearest point per page row vs per report vs no GiST, on 100k reports (rolled-back txn)
+  queries/11                   hotspots: driven from reports (17 ms) vs from 50k points (149 ms)
   queries/09                   report search + count + OFFSET on 100k rows, trigram index on/off (rolled-back txn)
   explain/                     saved plans
 ```

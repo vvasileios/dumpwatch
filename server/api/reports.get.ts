@@ -15,15 +15,21 @@ const BboxSchema = z
     );
 
 const QUERY = `
-	SELECT id, status, description, reported_at, cleared_at,
-		ST_Y(location::geometry) AS lat, ST_X(location::geometry) AS lng
-	FROM dump_reports
-	WHERE location && ST_MakeEnvelope($1, $2, $3, $4, 4326)::geography
-	AND ($5::text IS NULL OR status = $5)
-	ORDER BY reported_at DESC
-	LIMIT $6
+	SELECT p.id, p.status, p.description, p.reported_at, p.cleared_at,
+		ST_Y(p.location::geometry) AS lat, ST_X(p.location::geometry) AS lng,
+		n.nearest
+	FROM (
+		SELECT id, status, description, reported_at, cleared_at, location
+		FROM dump_reports
+		WHERE location && ST_MakeEnvelope($1, $2, $3, $4, 4326)::geography
+		AND ($5::text IS NULL OR status = $5)
+		ORDER BY reported_at DESC
+		LIMIT $6
+	) p
+	${NEAREST_POINT_JOIN}
+	ORDER BY p.reported_at DESC
 `;
-export default defineEventHandler(async (event): Promise<DumpReport[]> => {
+export default defineEventHandler(async (event): Promise<ReportWithNearest[]> => {
     await requireSession(event);
 
     const { bbox, status } = parseInput(
@@ -35,7 +41,7 @@ export default defineEventHandler(async (event): Promise<DumpReport[]> => {
     );
 
     const [minLng, minLat, maxLng, maxLat] = bbox;
-    const { rows } = await db().query<DumpReport>(QUERY, [
+    const { rows } = await db().query<ReportWithNearest>(QUERY, [
         minLng,
         minLat,
         maxLng,

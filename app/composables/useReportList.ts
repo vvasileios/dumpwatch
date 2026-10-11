@@ -47,7 +47,7 @@ export async function useReportList() {
     const router = useRouter();
     const params = computed(() => parseQuery(route.query));
 
-    const reports = ref<ReportListItem[]>([]);
+    const reports = ref<ReportWithNearest[]>([]);
     const saving = ref(new Set<string>());
     const actionError = ref<string | null>(null);
     const search = ref(params.value.q);
@@ -121,7 +121,7 @@ export async function useReportList() {
     );
     onBeforeUnmount(() => clearTimeout(searchTimer));
 
-    async function updateStatus(report: ReportListItem, status: ReportStatus) {
+    async function updateStatus(report: ReportWithNearest, status: ReportStatus) {
         const previous = report.status;
         report.status = status;
         saving.value.add(report.id);

@@ -30,17 +30,7 @@ const rowsQuery = (sort: ReportSort, dir: SortDir) => {
 		ORDER BY ${order}
 		LIMIT $5 OFFSET $6
 	) p
-	LEFT JOIN LATERAL (
-		SELECT json_build_object(
-			'id', cp.id::text,
-			'type', cp.type,
-			'fill_level', cp.fill_level,
-			'meters', round(ST_Distance(cp.location, p.location))::int
-		) AS nearest
-		FROM collection_points cp
-		ORDER BY cp.location <-> p.location
-		LIMIT 1
-	) n ON true
+	${NEAREST_POINT_JOIN}
 	ORDER BY ${order}
 `;
 };
@@ -88,7 +78,7 @@ export default defineEventHandler(async (event): Promise<DumpReportList> => {
     const page = Math.min(query.page ?? 1, Math.max(1, Math.ceil(total / size)));
 
     const { rows: reports } = total
-        ? await db().query<ReportListItem>(
+        ? await db().query<ReportWithNearest>(
 			rowsQuery(query.sort ?? "reported", query.dir ?? "desc"),
 			[...params, size, (page - 1) * size],
 		)

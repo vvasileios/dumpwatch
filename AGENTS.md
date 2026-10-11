@@ -92,7 +92,7 @@ make reset                    # DESTRUCTIVE: deletes DB and node_modules volumes
 - `.client.vue` components render after mount: `await nextTick()` before touching template refs.
 - Leaflet: `circleMarker` (default pin images break with Vite); popups via `textContent` (XSS); `bubblingMouseEvents: false` on markers; `latlng.wrap()`. `moveend` doesn't fire for the initial view: emit bounds once in `onReady`. Container resizes need `invalidateSize()` (`useLeafletMap` has a `ResizeObserver`).
 - Accessibility: `aria-live` only for errors and state changes, not on every pan. `AppLoader` without `label` is decorative; pass `label` only when no visible text says the same.
-- Tailwind utility classes in templates; reuse `AppLoader`, `AppEmptyState`, `reportStatusColors`, and Lucide icons (`lucide:name`).
+- Tailwind utility classes in templates; reuse `AppLoader`, `AppEmptyState`, `SharedTable` (columns + `#cell-<key>` slots), `PointsBadge`, `reportStatusColors`, and Lucide icons (`lucide:name`).
 
 ## Before you finish
 

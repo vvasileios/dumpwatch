@@ -1,7 +1,7 @@
 export function useReports() {
     const show = ref(false);
     const bbox = ref<Bbox | null>(null);
-    const reports = ref<DumpReport[]>([]);
+    const reports = ref<ReportWithNearest[]>([]);
     const loadingReports = ref(false);
     const tooLarge = ref(false);
     const errorReports = ref<string | null>(null);
@@ -23,7 +23,7 @@ export function useReports() {
         loadingReports.value = true;
 
         try {
-            const result = await $fetch<DumpReport[]>("/api/reports", {
+            const result = await $fetch<ReportWithNearest[]>("/api/reports", {
                 query: { bbox: box.join(",") },
                 signal: current.signal,
             });

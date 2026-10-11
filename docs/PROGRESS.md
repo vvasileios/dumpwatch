@@ -19,11 +19,11 @@ Done and committed:
 - **Slice 8:** zone dashboard on `/zones`: `GET /api/stats/zones` (GROUPING SETS city row, avg hours to clear) and `GET /api/stats/weekly?zone=` (12 weeks, `generate_series` in Europe/Athens, empty weeks filled), `useZoneDashboard`, `ZonesCard`, `ZonesTrend` (plain HTML bar chart). API and browser tested, light/dark/phone.
 - **Slice 8 review fixes:** weekly trend bucketed with `date_trunc(..., tz)` (DST weeks lost/double-counted an hour), zone trend in one query with one GiST scan, city row counts border reports once, Retry buttons for stats/trend errors, `?zone=02` normalised, and `parseInput` gives every handler the `fieldErrors` 400 shape.
 - **Slice 9:** nearest collection point per report in the `/reports` table (type, distance, fill level): `LEFT JOIN LATERAL ... ORDER BY location <-> ... LIMIT 1` after paging; status updates merge the PATCH response so the column survives. EXPLAIN in `db/queries/10_report_list_nearest.sql` (4.5 ms after paging vs 2.9 s per-report vs 271 ms without GiST). API and browser tested.
+- **Slice 10:** `/collection-points` hotspots (staff): `GET /api/points/hotspots?radius=` (ST_DWithin from unresolved reports, EXPLAIN in `db/queries/11_hotspots.sql`), `SharedTable` extracted (reports + hotspots), `PointsBadge`, map opens at `?lat&lng`, nearest point in map report popups (shared `NEAREST_POINT_JOIN`, ~20 ms for 500 reports). API and browser tested.
 
 ## Next
 
-1. **Slice 10 (proposal):** `/collection-points` staff page: hotspots = collection points with open dumps nearby (`ST_DWithin`), full bins first; nearest point in map report popups.
-2. **Before real data:**
+1. **Before real data:**
    - Migrations (dbmate); this also enables the `reported_by` foreign key.
    - A few API tests.
    - Production Dockerfile (`nuxt build`), Caddy for HTTPS.
@@ -38,4 +38,3 @@ Done and committed:
 - Schema changes go through `db/init` and need `make reset`, which wipes the database.
 - Seed dates shift with `now()` on every reset; ids and locations stay the same.
 - Zones share edges: a report exactly on a border counts in both zone cards (`ST_Covers`), so zone cards can add up to more than the city card (which counts each report once).
-- Only one table so far (`ReportsTable`); extract a `SharedTable` when a second one appears.

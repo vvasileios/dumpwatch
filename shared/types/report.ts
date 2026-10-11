@@ -28,12 +28,12 @@ export interface NearestPoint {
     meters: number;
 }
 
-export interface ReportListItem extends DumpReport {
+export interface ReportWithNearest extends DumpReport {
     nearest: NearestPoint | null;
 }
 
 export interface DumpReportList {
-    reports: ReportListItem[];
+    reports: ReportWithNearest[];
     total: number;
     page: number;
     canModerate: boolean;

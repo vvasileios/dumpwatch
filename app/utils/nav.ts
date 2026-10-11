@@ -23,7 +23,7 @@ export const navItems: NavItem[] = [
         label: "Collection points",
         to: "/collection-points",
         icon: "lucide:trash-2",
-        description: "Nearby collection and drop-off points",
+        description: "Hotspots: collection points with dumps nearby",
         roles: ["moderator", "admin"],
     },
     {

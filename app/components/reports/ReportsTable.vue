@@ -1,182 +1,92 @@
 <script setup lang="ts">
-const props = defineProps<{
-    reports: ReportListItem[];
+defineProps<{
+    reports: ReportWithNearest[];
     canModerate: boolean;
     saving: Set<string>;
     sort: ReportSort;
     dir: SortDir;
 }>();
 const emit = defineEmits<{
-    status: [report: ReportListItem, status: ReportStatus];
+    status: [report: ReportWithNearest, status: ReportStatus];
     sort: [key: ReportSort];
 }>();
 
-const columns: { label: string; sort?: ReportSort }[] = [
-    { label: "#" },
-    { label: "Status", sort: "status" },
-    { label: "Description" },
-    { label: "Nearest point" },
-    { label: "Reported", sort: "reported" },
-    { label: "Cleared", sort: "cleared" },
+const columns: { key: string; label: string; sort?: ReportSort; class?: string }[] = [
+    { key: "id", label: "#", class: "font-mono text-zinc-500 tabular-nums dark:text-zinc-400" },
+    { key: "status", label: "Status", sort: "status" },
+    { key: "description", label: "Description", class: "max-w-md truncate text-zinc-800 dark:text-zinc-100" },
+    { key: "nearest", label: "Nearest point" },
+    { key: "reported", label: "Reported", sort: "reported", class: "whitespace-nowrap text-zinc-500 dark:text-zinc-400" },
+    { key: "cleared", label: "Cleared", sort: "cleared", class: "whitespace-nowrap text-zinc-500 dark:text-zinc-400" },
 ];
-
-const scroller = useTemplateRef("scroller");
-watch(
-    () => props.reports,
-    () => scroller.value?.scrollTo({ top: 0 }),
-);
 </script>
 
 <template>
-    <div
-        ref="scroller"
-        class="max-h-[max(20rem,calc(100dvh-24rem))] overflow-auto rounded-xl ring-1 ring-zinc-900/10 transition-opacity dark:ring-white/10"
+    <SharedTable
+        label="Reports"
+        :rows="reports"
+        :columns="columns"
+        :sort="sort"
+        :dir="dir"
+        @sort="emit('sort', $event)"
     >
-        <table class="w-full text-left text-sm">
-            <thead
-                class="sticky top-0 z-10 bg-zinc-50 text-xs text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400"
-            >
-                <tr>
-                    <th
-                        v-for="col in columns"
-                        :key="col.label"
-                        scope="col"
-                        class="px-4 py-2.5 font-medium"
-                        :aria-sort="
-                            col.sort && sort === col.sort
-                                ? dir === 'asc'
-                                    ? 'ascending'
-                                    : 'descending'
-                                : undefined
-                        "
-                    >
-                        <button
-                            v-if="col.sort"
-                            type="button"
-                            class="-mx-1.5 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 transition hover:bg-zinc-900/5 hover:text-zinc-900 focus-visible:ring-4 focus-visible:ring-emerald-600/25 focus-visible:outline-none dark:hover:bg-white/10 dark:hover:text-white"
-                            :class="
-                                sort === col.sort &&
-                                'text-zinc-900 dark:text-white'
-                            "
-                            @click="emit('sort', col.sort)"
-                        >
-                            {{ col.label }}
-                            <Icon
-                                :name="
-                                    sort !== col.sort
-                                        ? 'lucide:chevrons-up-down'
-                                        : dir === 'asc'
-                                          ? 'lucide:arrow-up'
-                                          : 'lucide:arrow-down'
-                                "
-                                class="size-3.5"
-                            />
-                        </button>
-                        <template v-else>{{ col.label }}</template>
-                    </th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-zinc-900/5 dark:divide-white/10">
-                <tr v-for="r in reports" :key="r.id">
-                    <td
-                        class="px-4 py-3 font-mono text-zinc-500 tabular-nums dark:text-zinc-400"
-                    >
-                        {{ r.id }}
-                    </td>
-                    <td class="px-4 py-3">
-                        <div class="flex items-center gap-2">
-                            <span
-                                class="size-2 shrink-0 rounded-full"
-                                :style="{
-                                    backgroundColor:
-                                        reportStatusColors[r.status],
-                                }"
-                                aria-hidden="true"
-                            />
-                            <SharedSelect
-                                v-if="canModerate"
-                                :model-value="r.status"
-                                :options="reportStatusOptions"
-                                size="sm"
-                                :disabled="saving.has(r.id)"
-                                :aria-label="`Status of report #${r.id}`"
-                                class="capitalize"
-                                @update:model-value="emit('status', r, $event)"
-                            />
-                            <span
-                                v-else
-                                class="font-medium text-zinc-800 capitalize dark:text-zinc-100"
-                                >{{ r.status }}</span
-                            >
-                        </div>
-                    </td>
-                    <td
-                        class="max-w-md truncate px-4 py-3 text-zinc-800 dark:text-zinc-100"
-                        :title="r.description ?? undefined"
-                    >
-                        {{ r.description ?? "—" }}
-                    </td>
-                    <td class="px-4 py-3 whitespace-nowrap">
-                        <span
-                            v-if="r.nearest"
-                            class="flex items-center gap-2"
-                        >
-                            <span
-                                class="size-2 shrink-0 rounded-full"
-                                :style="{
-                                    backgroundColor:
-                                        pointTypeColors[r.nearest.type],
-                                }"
-                                aria-hidden="true"
-                            />
-                            <span>
-                                <span
-                                    class="text-zinc-800 capitalize dark:text-zinc-100"
-                                    >{{ r.nearest.type }}</span
-                                >{{ " " }}<span
-                                    class="text-zinc-500 tabular-nums dark:text-zinc-400"
-                                    >{{ formatDistance(r.nearest.meters) }}</span
-                                ><template v-if="r.nearest.fill_level !== null"
-                                    >{{ " · " }}<span
-                                        class="tabular-nums"
-                                        :class="
-                                            r.nearest.fill_level >= 80
-                                                ? 'text-red-600 dark:text-red-400'
-                                                : 'text-zinc-500 dark:text-zinc-400'
-                                        "
-                                        >{{ r.nearest.fill_level }}% full</span
-                                    ></template
-                                >
-                            </span>
-                        </span>
-                        <span v-else aria-label="No collection point">—</span>
-                    </td>
-                    <td
-                        class="px-4 py-3 whitespace-nowrap text-zinc-500 dark:text-zinc-400"
-                    >
-                        <NuxtTime
-                            :datetime="r.reported_at"
-                            day="numeric"
-                            month="short"
-                            year="numeric"
-                            hour="2-digit"
-                            minute="2-digit"
-                        />
-                    </td>
-                    <td
-                        class="px-4 py-3 whitespace-nowrap text-zinc-500 dark:text-zinc-400"
-                    >
-                        <NuxtTime
-                            v-if="r.cleared_at"
-                            :datetime="r.cleared_at"
-                            day="numeric"
-                            month="short"
-                            year="numeric"
-                        />
-                        <span v-else aria-label="Not cleared">—</span>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
+        <template #cell-status="{ row }">
+            <div class="flex items-center gap-2">
+                <span
+                    class="size-2 shrink-0 rounded-full"
+                    :style="{ backgroundColor: reportStatusColors[row.status] }"
+                    aria-hidden="true"
+                />
+                <SharedSelect
+                    v-if="canModerate"
+                    :model-value="row.status"
+                    :options="reportStatusOptions"
+                    size="sm"
+                    :disabled="saving.has(row.id)"
+                    :aria-label="`Status of report #${row.id}`"
+                    class="capitalize"
+                    @update:model-value="emit('status', row, $event)"
+                />
+                <span
+                    v-else
+                    class="font-medium text-zinc-800 capitalize dark:text-zinc-100"
+                    >{{ row.status }}</span
+                >
+            </div>
+        </template>
+        <template #cell-description="{ row }">
+            <span :title="row.description ?? undefined">{{
+                row.description ?? "—"
+            }}</span>
+        </template>
+        <template #cell-nearest="{ row }">
+            <PointsBadge
+                v-if="row.nearest"
+                :type="row.nearest.type"
+                :fill-level="row.nearest.fill_level"
+                :meters="row.nearest.meters"
+            />
+            <span v-else aria-label="No collection point">—</span>
+        </template>
+        <template #cell-reported="{ row }">
+            <NuxtTime
+                :datetime="row.reported_at"
+                day="numeric"
+                month="short"
+                year="numeric"
+                hour="2-digit"
+                minute="2-digit"
+            />
+        </template>
+        <template #cell-cleared="{ row }">
+            <NuxtTime
+                v-if="row.cleared_at"
+                :datetime="row.cleared_at"
+                day="numeric"
+                month="short"
+                year="numeric"
+            />
+            <span v-else aria-label="Not cleared">—</span>
+        </template>
+    </SharedTable>
 </template>
